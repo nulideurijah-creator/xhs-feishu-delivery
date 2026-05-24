@@ -2,8 +2,8 @@
   "_comment": "Starter content spec for one Xiaohongshu image-text post. Replace all topic, copy, tags, and page fields before real delivery.",
   "review_id": "publish-starter-ai-tool-001",
   "content_id": "starter-ai-tool-xhs-001",
-  "title": "AI工具先看3点",
-  "summary": "A neutral starter post for explaining how to judge whether a new AI tool is worth trying.",
+  "title": "别被AI演示骗了",
+  "summary": "A starter post for explaining how to judge whether a new AI tool is actually worth trying after the demo hype fades.",
   "topic": "如何判断一个新 AI 工具值不值得试",
   "hot_source": "starter example",
   "source_urls": [
@@ -14,7 +14,7 @@
     "published_at": "",
     "note": "This starter file is only a format example. Verify real claims before delivery."
   },
-  "body_full": "看到一个新 AI 工具，先别急着收藏或转发。\n\n真正值得看的不是宣传词，而是三个问题：\n\n第一，它解决的是不是你真实会遇到的问题。很多工具演示很好看，但只适合展示，不一定能进入你的日常流程。\n\n第二，它能不能接到你现在的工作方式里。比如输入材料从哪里来，结果要交给谁，出错以后谁来检查。\n\n第三，它有没有明确的风险边界。涉及账号、客户资料、发布内容或代码修改时，都要保留人工确认。\n\n我的判断方法很简单：先拿一个低风险的小任务试一遍，再看它能不能稳定省时间。\n\n如果只是第一次看起来很惊艳，但后面每次都要花很多时间修，那就还不适合放进正式流程。\n\n你最近试过哪个 AI 工具？真正留下来的原因是什么？",
+  "body_full": "看到一个新 AI 工具，先别急着收藏或转发。\n\n演示越惊艳，越要先问三个问题：\n\n第一，它解决的是不是你真实会遇到的问题。很多工具演示很好看，但只适合展示，不一定能进入你的日常流程。\n\n第二，它能不能接到你现在的工作方式里。比如输入材料从哪里来，结果要交给谁，出错以后谁来检查。\n\n第三，它有没有明确的风险边界。涉及账号、客户资料、发布内容或代码修改时，都要保留人工确认。\n\n我的判断方法很简单：先拿一个低风险的小任务试一遍，再看它能不能稳定省时间。\n\n如果只是第一次看起来很惊艳，但后面每次都要花很多时间修，那就还不适合放进正式流程。\n\n你最近试过哪个 AI 工具？真正留下来的原因是什么？",
   "tags": [
     "AI工具",
     "AI效率",
@@ -23,17 +23,17 @@
   ],
   "title_candidates": [
     {
-      "title": "AI工具先看3点",
-      "type": "收藏价值",
-      "reason": "给读者一个可执行的判断清单。"
+      "title": "别被AI演示骗了",
+      "type": "反差冲突",
+      "reason": "把常见的演示惊艳感反过来提醒，适合作为首图钩子。"
     },
     {
-      "title": "别急着追新AI工具",
+      "title": "别急着追新AI",
       "type": "反差提醒",
       "reason": "用提醒式开头降低盲目追热点的感觉。"
     },
     {
-      "title": "这个AI工具值得用吗",
+      "title": "这个AI值得用吗",
       "type": "问题钩子",
       "reason": "贴近日常决策场景，适合引出判断框架。"
     }
@@ -42,9 +42,9 @@
   "pages": [
     {
       "page_id": "01-cover",
-      "title": "AI工具先看3点",
-      "subtitle": "别只看演示，先看能不能进流程",
-      "visual": "一位创作者站在几个 AI 工具卡片前，用放大镜检查其中一个工具，旁边有三枚清晰的检查标记。"
+      "title": "别被AI演示骗了",
+      "subtitle": "先看这3点，再决定要不要用",
+      "visual": "一位创作者差点被闪亮的 AI 演示吸引，旁边放大镜圈出三个真实检查点：需求、接入、风险。画面要有反差感和提醒感。"
     },
     {
       "page_id": "02-problem",
