@@ -26,9 +26,11 @@ Use this skill to operate the local workflow that creates a Xiaohongshu image-te
 3. Make sure 6 approved PNG images exist under `image-generation/outputs/images/<image_slug>/`.
 4. Run the wrapper:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --local-only`
-5. If Feishu credentials should be checked without sending:
+5. After a machine restart, check Feishu credentials without building or sending:
+   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-feishu`
+6. If Feishu credentials should be checked after building the package:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --dry-run`
-6. Only when the user explicitly wants delivery to Feishu:
+7. Only when the user explicitly wants delivery to Feishu:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --send`
 
 ## Content Standards
@@ -51,6 +53,7 @@ Before saying the workflow is ready, run:
 
 ```powershell
 python scripts/validate_skill_safety.py --skill-dir "<skill-dir>"
+python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-feishu
 python scripts/run_xhs_delivery.py --workspace "<workspace>" --local-only
 ```
 

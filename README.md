@@ -50,6 +50,7 @@ workspace/
 │   ├── build_manual_publish_package.py
 │   └── preflight.py
 └── feishu-delivery/
+    ├── check_feishu_ready.py
     ├── build_delivery_card.py
     ├── send_delivery_card.py
     └── .env
@@ -66,6 +67,12 @@ python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --local-on
 ```
 
 Validate Feishu credentials without sending:
+
+```powershell
+python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --check-feishu
+```
+
+Build the package and validate Feishu credentials without sending:
 
 ```powershell
 python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --dry-run
@@ -102,6 +109,8 @@ FEISHU_RECEIVE_ID=
 python scripts/validate_skill_safety.py --skill-dir .
 python -m py_compile scripts/run_xhs_delivery.py scripts/validate_skill_safety.py
 ```
+
+Feishu delivery does not use a persistent connection. Reboots do not break a daemon because there is no daemon; each send fetches a fresh tenant token.
 
 ## License
 

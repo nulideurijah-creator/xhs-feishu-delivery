@@ -14,6 +14,7 @@ REQUIRED_FILES = [
     "asset-generation/generate_current_assets.py",
     "publish-mainline/build_manual_publish_package.py",
     "publish-mainline/preflight.py",
+    "feishu-delivery/check_feishu_ready.py",
     "feishu-delivery/build_delivery_card.py",
     "feishu-delivery/send_delivery_card.py",
 ]
@@ -53,6 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to a workspace containing asset-generation, publish-mainline, and feishu-delivery.",
     )
     mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--check-feishu", action="store_true", help="Check Feishu credentials without building or sending")
     mode.add_argument("--local-only", action="store_true", help="Build and validate without Feishu credentials")
     mode.add_argument("--dry-run", action="store_true", help="Build and validate Feishu credentials")
     mode.add_argument("--send", action="store_true", help="Build and send the Feishu delivery card")
@@ -62,6 +64,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str]) -> int:
     args = build_parser().parse_args(argv)
     workspace = resolve_workspace(args.workspace)
+    if args.check_feishu:
+        run_step(workspace, "check_feishu_ready", [sys.executable, ".\\feishu-delivery\\check_feishu_ready.py"])
+        return 0
+
     send_mode = "--local-only"
     if args.dry_run:
         send_mode = "--dry-run"
