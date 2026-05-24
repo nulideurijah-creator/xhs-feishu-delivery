@@ -20,6 +20,11 @@ COPY_PATH = OUT / "current-copy.md"
 TITLE_PATH = OUT / "current-title-candidates.md"
 PROMPT_PACKAGE_PATH = OUT / "current-image-card-prompts.md"
 
+IMAGE_PRESET = "sketch-summary"
+IMAGE_STYLE = "xhs-ai-hook-sketch"
+IMAGE_LAYOUT = "balanced"
+IMAGE_PALETTE = "macaron"
+
 FORBIDDEN_PHRASES = [
     # Phrases that tend to make Chinese social copy sound generic or AI-written.
     # Keep this list short and concrete; users can adapt it in their workspace.
@@ -102,6 +107,20 @@ def render_titles(spec: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def card_specific_rules(page: dict[str, Any]) -> str:
+    if page["page_id"] == "01-cover":
+        return """Cover hook rules:
+- This is the first card and must stop Xiaohongshu users from swiping away.
+- Build the hook from tension: consequence, contrast, warning, strong pain point, or concrete benefit.
+- Make the headline feel like a sharp discovery or useful judgment, not a neutral report.
+- Keep it visually simple: one dominant metaphor, one large title, one short subtitle.
+- The value should be obvious in one second on a phone screen."""
+    return """Inner card rules:
+- Explain one idea per card with clear visual hierarchy.
+- Keep the same premium hand-drawn visual system as the cover.
+- Use small labels, arrows, circles, and checklist marks only where they help scanning."""
+
+
 def card_prompt(page: dict[str, Any], spec: dict[str, Any]) -> str:
     return f"""---
 source: asset-generation/content_spec.json
@@ -109,17 +128,22 @@ content_id: {spec["content_id"]}
 page_id: {page["page_id"]}
 title: {page["title"]}
 ratio: "3:4"
-preset: sketch-summary
-style: sketch-notes
-layout: balanced
-palette: macaron
+preset: {IMAGE_PRESET}
+style: {IMAGE_STYLE}
+layout: {IMAGE_LAYOUT}
+palette: {IMAGE_PALETTE}
 review_status: pending
 ---
 
 Use case: infographic-diagram
 Asset type: Xiaohongshu vertical image card
 Primary request:
-Create one polished 3:4 Chinese Xiaohongshu knowledge card about {spec["topic"]}.
+Create one polished 3:4 Chinese Xiaohongshu AI knowledge card about {spec["topic"]}.
+
+Creative direction:
+Use the custom xhs-ai-hook-sketch style: premium hand-drawn Xiaohongshu card, warm macaron paper texture, bold handwritten Chinese, clear AI/tool/productivity cues, and stronger click-through appeal than a normal note card.
+
+{card_specific_rules(page)}
 
 Text must be clear, large, and sparse:
 - Main title, verbatim: "{page["title"]}"
@@ -127,7 +151,8 @@ Text must be clear, large, and sparse:
 
 Scene/backdrop:
 - Warm cream paper background, soft macaron zones in blue, mint, peach, and lavender.
-- Polished hand-drawn educational infographic, soft watercolor texture, confident black sketch lines, friendly creator-economy tone.
+- Polished hand-drawn educational infographic, soft watercolor texture, confident black sketch lines, premium creator-economy tone.
+- Avoid a cheap template look; the card should feel designed for Xiaohongshu discovery feed.
 
 Subject and visual:
 - {page["visual"]}
@@ -137,6 +162,7 @@ Composition:
 - One central visual metaphor in the middle.
 - One small subtitle band at the bottom.
 - Keep enough margin for mobile cropping.
+- If this is the cover, prioritize the hook headline and central metaphor over explanatory detail.
 
 Constraints:
 - No fake brand logo.
@@ -144,6 +170,7 @@ Constraints:
 - No dense paragraphs.
 - No English sentence blocks; only short labels are allowed when necessary.
 - Avoid lifestyle, beauty, food, travel, or generic social media visuals.
+- Do not bury the hook in small text.
 - Do not imply the workflow can be shipped without human review.
 """
 
@@ -218,7 +245,7 @@ def render_prompt_package(package: dict[str, Any]) -> str:
     lines = [
         "# 图卡 prompt 包",
         "",
-        "来源：`baoyu-image-cards` 规则，preset=`sketch-summary`，style=`sketch-notes`，layout=`balanced`，palette=`macaron`。",
+        f"来源：`baoyu-image-cards` 规则，preset=`{IMAGE_PRESET}`，style=`{IMAGE_STYLE}`，layout=`{IMAGE_LAYOUT}`，palette=`{IMAGE_PALETTE}`。",
         "",
     ]
     for image in package["images"]:

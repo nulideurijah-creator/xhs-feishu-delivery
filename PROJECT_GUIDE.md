@@ -41,6 +41,7 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | File | Purpose |
 |---|---|
 | `assets/workspace-template/.gitignore` | Keeps local Feishu credentials, generated outputs, caches, and lock files out of git. |
+| `assets/workspace-template/.baoyu-skills/baoyu-image-cards/EXTEND.md` | Bundled `baoyu-image-cards` preference file. It disables watermarks, pins Codex image generation, and defines the `xhs-ai-hook-sketch` style for stronger first-card hooks. |
 | `assets/workspace-template/requirements.txt` | Python dependency list for the generated workspace. It is intentionally empty by default because final cards are model-generated, not drawn locally. |
 | `assets/workspace-template/run_xhs_delivery.py` | Workspace-local packaging and Feishu runner. It mirrors the skill wrapper but does not require `--workspace`. |
 | `assets/workspace-template/asset-generation/content_spec.json` | Editable post specification. Users change this file to create a new post. |
