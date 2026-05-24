@@ -1,0 +1,68 @@
+{
+  "review_id": "publish-example-20260524-001",
+  "content_id": "example-xhs-20260524-001",
+  "title": "AI工具别急着用",
+  "summary": "AI 圈热点图文成品：解释一个新 AI 工具为什么值得关注，以及普通用户该怎么判断。",
+  "topic": "某个 AI 工具的新能力",
+  "hot_source": "AI HOT 精选 + 官方来源核验",
+  "source_urls": [
+    "https://example.com/source"
+  ],
+  "source_verification": {
+    "source": "官方公告或可信来源",
+    "published_at": "2026-05-24T00:00:00+08:00",
+    "note": "只解读公开信息，不承诺产品效果。"
+  },
+  "body_full": "这里写最终小红书正文。保持口语、具体、有判断，不要写成模板套话。正文总长度必须控制在 1000 字以内。",
+  "tags": [
+    "AI工具",
+    "AI效率",
+    "AI编程"
+  ],
+  "title_candidates": [
+    {
+      "title": "AI工具别急着用",
+      "type": "风险提醒",
+      "reason": "提醒用户先判断适用场景。"
+    }
+  ],
+  "image_slug": "example-20260524",
+  "pages": [
+    {
+      "page_id": "01-cover",
+      "title": "AI工具别急着用",
+      "subtitle": "先看清它解决什么问题",
+      "visual": "一个人站在工具箱前，用放大镜检查一个 AI 工具。"
+    },
+    {
+      "page_id": "02-context",
+      "title": "发生了什么",
+      "subtitle": "一句话讲清新变化",
+      "visual": "一张简洁的信息卡，展示公告、功能、用户三者关系。"
+    },
+    {
+      "page_id": "03-value",
+      "title": "真正价值",
+      "subtitle": "不是新功能，而是新流程",
+      "visual": "旧流程和新流程对比图。"
+    },
+    {
+      "page_id": "04-check",
+      "title": "怎么判断",
+      "subtitle": "看需求、成本、风险",
+      "visual": "三格检查清单。"
+    },
+    {
+      "page_id": "05-risk",
+      "title": "别直接上线",
+      "subtitle": "AI 输出仍要人工验收",
+      "visual": "发布按钮前的暂停标志和检查清单。"
+    },
+    {
+      "page_id": "06-comment",
+      "title": "你会怎么用",
+      "subtitle": "欢迎说说你的场景",
+      "visual": "评论区气泡围绕几个使用场景标签。"
+    }
+  ]
+}
