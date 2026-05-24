@@ -2,7 +2,7 @@
 """Generate the current Xiaohongshu manual publish asset package from a spec.
 
 Reads asset-generation/content_spec.json and writes structured outputs used by
-image rendering, local publishing-package generation, and Feishu delivery.
+model image generation, local publishing-package generation, and Feishu delivery.
 """
 
 from __future__ import annotations
@@ -109,9 +109,9 @@ content_id: {spec["content_id"]}
 page_id: {page["page_id"]}
 title: {page["title"]}
 ratio: "3:4"
-preset: knowledge-card
-style: notion
-layout: dense
+preset: sketch-summary
+style: sketch-notes
+layout: balanced
 palette: macaron
 review_status: pending
 ---
@@ -126,8 +126,8 @@ Text must be clear, large, and sparse:
 - Small subtitle, verbatim: "{page["subtitle"]}"
 
 Scene/backdrop:
-- Warm cream background, soft macaron zones in blue, mint, peach, and lavender.
-- Clean Notion-style hand-drawn infographic, thin black outline, light paper texture.
+- Warm cream paper background, soft macaron zones in blue, mint, peach, and lavender.
+- Polished hand-drawn educational infographic, soft watercolor texture, confident black sketch lines, friendly creator-economy tone.
 
 Subject and visual:
 - {page["visual"]}
@@ -208,7 +208,7 @@ def build_package(spec: dict[str, Any]) -> dict[str, Any]:
             "topic": "aihot",
             "title": "dbs-xhs-title style rules",
             "copy": "write-xiaohongshu + humanizer-zh editing rules",
-            "image_prompts": "baoyu-image-cards",
+            "image_prompts": "baoyu-image-cards + Codex imagegen",
         },
         "created_at": now(),
     }
@@ -218,7 +218,7 @@ def render_prompt_package(package: dict[str, Any]) -> str:
     lines = [
         "# 图卡 prompt 包",
         "",
-        "来源：`baoyu-image-cards` 规则，preset=`knowledge-card`，style=`notion`，layout=`dense`，palette=`macaron`。",
+        "来源：`baoyu-image-cards` 规则，preset=`sketch-summary`，style=`sketch-notes`，layout=`balanced`，palette=`macaron`。",
         "",
     ]
     for image in package["images"]:

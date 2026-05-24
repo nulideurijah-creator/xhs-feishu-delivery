@@ -2,7 +2,7 @@
 
 `xhs-feishu-delivery` is a Codex skill plus a ready-to-copy workspace template for producing Xiaohongshu image-text posts and delivering the complete posting package to Feishu.
 
-The project is designed for creators who want an AI-assisted content production workflow but still want to post manually on Xiaohongshu. It generates copy, renders 6 image cards, builds a manual publishing package, and sends the full title/body/tags/images to Feishu so the user can publish from mobile.
+The project is designed for creators who want an AI-assisted content production workflow but still want to post manually on Xiaohongshu. It generates copy and image prompts, uses mature image-generation skills/models for the 6 final image cards, builds a manual publishing package, and sends the full title/body/tags/images to Feishu so the user can publish from mobile.
 
 It does **not** automate Xiaohongshu publishing, login, cookies, MCP, or browser control.
 
@@ -10,7 +10,8 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, or browser
 
 - A Codex skill entrypoint: `SKILL.md`.
 - A complete workspace template under `assets/workspace-template`.
-- A one-command wrapper for initializing, validating, rendering, packaging, and sending.
+- A wrapper for initializing, validating, packaging, and sending.
+- A model-first image step: final image cards should come from `baoyu-image-cards`/Codex `imagegen`, not from local drawing scripts.
 - Feishu health checks that can run after Windows logon.
 - Safety checks that prevent accidental Xiaohongshu automation or secret leakage.
 
@@ -19,7 +20,7 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, or browser
 ```mermaid
 flowchart LR
   A["content_spec.json"] --> B["Generate copy + prompts"]
-  B --> C["Render 6 PNG cards"]
+  B --> C["Generate 6 model image cards"]
   C --> D["Build manual package"]
   D --> E["Build Feishu card"]
   E --> F["Send to Feishu"]
@@ -68,6 +69,13 @@ FEISHU_RECEIVE_ID=
 Validate without Feishu:
 
 ```powershell
+# First create copy and image prompts:
+python .\asset-generation\generate_current_assets.py
+
+# Then generate the 6 PNG cards with baoyu-image-cards / Codex imagegen and
+# save them to the image_path values in asset-generation\outputs\current-publish-assets.json.
+
+# Finally package and validate:
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --local-only
 ```
 
@@ -103,6 +111,7 @@ python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_deliv
 - No Xiaohongshu MCP.
 - No Xiaohongshu cookies.
 - No browser publishing automation.
+- No local template drawing renderer for final cards.
 - No Feishu buttons, callbacks, WebSocket receiver, or tunnel.
 - Workspace runs are protected by `.xhs_delivery.lock`.
 

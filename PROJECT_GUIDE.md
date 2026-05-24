@@ -40,11 +40,11 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | File | Purpose |
 |---|---|
 | `assets/workspace-template/.gitignore` | Keeps local Feishu credentials, generated outputs, caches, and lock files out of git. |
-| `assets/workspace-template/requirements.txt` | Python dependency list for the generated workspace. Currently only needs Pillow for image rendering. |
-| `assets/workspace-template/run_xhs_delivery.py` | Workspace-local one-command runner. It mirrors the skill wrapper but does not require `--workspace`. |
+| `assets/workspace-template/requirements.txt` | Python dependency list for the generated workspace. It is intentionally empty by default because final cards are model-generated, not drawn locally. |
+| `assets/workspace-template/run_xhs_delivery.py` | Workspace-local packaging and Feishu runner. It mirrors the skill wrapper but does not require `--workspace`. |
 | `assets/workspace-template/asset-generation/content_spec.json` | Editable post specification. Users change this file to create a new post. |
-| `assets/workspace-template/asset-generation/generate_current_assets.py` | Validates the spec, writes copy/title/prompt outputs, and prepares image metadata. |
-| `assets/workspace-template/image-generation/render_current_cards.py` | Renders 6 PNG image cards from `content_spec.json`. |
+| `assets/workspace-template/asset-generation/generate_current_assets.py` | Validates the spec, writes copy/title/prompt outputs, and prepares image paths for model-generated cards. |
+| `assets/workspace-template/image-generation/.gitkeep` | Keeps the model-image directory in the template. Prompt files and PNG outputs are generated here at runtime. |
 | `assets/workspace-template/publish-mainline/build_manual_publish_package.py` | Builds the local manual publishing package from generated assets. |
 | `assets/workspace-template/publish-mainline/preflight.py` | Checks whether the manual package is ready and records any blocking issues. |
 | `assets/workspace-template/feishu-delivery/.env.example` | Template for Feishu credentials. Copy it to `.env` and fill in local values. |

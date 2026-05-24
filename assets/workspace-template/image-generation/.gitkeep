@@ -1,0 +1,4 @@
+# Keeps the model-image directory in the workspace template.
+#
+# Prompts are written under image-generation/prompts/<image_slug>/.
+# Final model-generated PNGs go under image-generation/outputs/images/<image_slug>/.

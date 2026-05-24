@@ -2,8 +2,9 @@
 """Run the Xiaohongshu manual delivery workflow end to end.
 
 This workspace-local runner is what users call after initializing a workspace.
-It keeps all generated files in this workspace and never publishes to
-Xiaohongshu automatically.
+It keeps all files in this workspace and never publishes to Xiaohongshu
+automatically. It packages model-generated image cards; it does not draw image
+cards with a local template script.
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ LOCK_TTL_SECONDS = 2 * 60 * 60
 
 
 def run_step(name: str, args: list[str]) -> None:
-    """Run one deterministic workflow step and stop immediately on failure."""
+    """Run one workflow step and stop immediately on failure."""
     print(f"\n== {name} ==")
     completed = subprocess.run(
         args,
@@ -97,8 +98,6 @@ def main(argv: list[str]) -> int:
 
     with workflow_lock():
         run_step("generate_assets", [sys.executable, ".\\asset-generation\\generate_current_assets.py"])
-        run_step("render_image_cards", [sys.executable, ".\\image-generation\\render_current_cards.py"])
-        run_step("refresh_assets", [sys.executable, ".\\asset-generation\\generate_current_assets.py"])
         run_step("build_manual_package", [sys.executable, ".\\publish-mainline\\build_manual_publish_package.py"])
         run_step("preflight", [sys.executable, ".\\publish-mainline\\preflight.py"])
         run_step("build_delivery_card", [sys.executable, ".\\feishu-delivery\\build_delivery_card.py"])

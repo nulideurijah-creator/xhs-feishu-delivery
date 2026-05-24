@@ -31,9 +31,14 @@ Each `pages` item must include:
 - `subtitle`: short card subtitle.
 - `visual`: visual direction for the image prompt.
 
-The workflow renders these images from `content_spec.json` before packaging:
+The workflow writes prompt files from `content_spec.json`. Codex should then use
+`baoyu-image-cards` / `imagegen` to generate the final PNG files before
+packaging:
 
 `image-generation/outputs/images/<image_slug>/<page_id>.png`
+
+Do not use a local drawing script, PIL renderer, SVG, HTML, or canvas output as
+the final image-card source.
 
 Do not add music fields, auto-publish fields, Xiaohongshu login fields, or analytics fields.
 
