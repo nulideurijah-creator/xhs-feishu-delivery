@@ -12,6 +12,7 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, or browser
 - A complete workspace template under `assets/workspace-template`.
 - A wrapper for initializing, validating, packaging, and sending.
 - A model-first image step: final image cards should come from `baoyu-image-cards`/Codex `imagegen`, using the bundled `xhs-warm-cute-open-source` style for warm cute Xiaohongshu covers that still expose GitHub/open-source facts clearly.
+- A workspace-local sent history file that records successful Feishu deliveries and blocks repeated topics before the next asset generation.
 - Feishu health checks that can run after Windows logon.
 - Safety checks that prevent accidental Xiaohongshu automation or secret leakage.
 
@@ -25,7 +26,7 @@ There are three layers:
 | Installed Codex skill | `%USERPROFILE%\.codex\skills\xhs-feishu-delivery` | The copy Codex reads when you invoke this skill. Update it from the GitHub repo after pulling changes. |
 | Local workspace | `D:\path\to\xhs-workspace` | Your production folder. It stores Feishu `.env`, current post spec, generated prompts, final images, and delivery outputs. Do not commit this folder. |
 
-The GitHub repo gives other users the same workflow and image-prompt style. It does not include your Feishu credentials, generated images, or private post history.
+The GitHub repo gives other users the same workflow and image-prompt style. It does not include your Feishu credentials, generated images, or private post history. Private sent history stays in the local workspace under `content-history/sent-posts.jsonl`.
 
 ## Workflow
 
@@ -37,11 +38,13 @@ flowchart LR
   D --> E["dbs-xhs-title creates title candidates"]
   E --> F["editor_prompt + write-xiaohongshu + humanizer-zh create body"]
   F --> G["content_spec.json"]
-  G --> H["baoyu-image-cards creates image prompts"]
-  H --> I["imagegen creates 6 PNG cards"]
-  I --> J["Build manual package"]
-  J --> K["Send complete Feishu card"]
-  K --> L["User posts manually on Xiaohongshu"]
+  G --> H["Check sent history for duplicates"]
+  H --> I["baoyu-image-cards creates image prompts"]
+  I --> J["imagegen creates 6 PNG cards"]
+  J --> K["Build manual package"]
+  K --> L["Send complete Feishu card"]
+  L --> M["Record sent history"]
+  M --> N["User posts manually on Xiaohongshu"]
 ```
 
 ## Mature Skills Used
@@ -129,10 +132,16 @@ python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_deliv
 Create the post assets:
 
 ```powershell
-# 5. Edit this file for your topic, content_type, insight_pack, body, tags, and six image cards.
+# 5. Before automatic topic selection, inspect previous successful sends.
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --history
+
+# 6. Edit this file for your topic, content_type, insight_pack, body, tags, and six image cards.
 notepad .\asset-generation\content_spec.json
 
-# 6. Generate copy output and image prompt files.
+# 7. Check this spec against sent history. Duplicate repo/source/topic keys are blocked.
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --check-history
+
+# 8. Generate copy output and image prompt files.
 python .\asset-generation\generate_current_assets.py
 ```
 
@@ -212,6 +221,43 @@ For GitHub stars, open-source projects, or repo-based topics, add verified facts
 ```
 
 The bundled `xhs-warm-cute-open-source` style asks the cover prompt to show those facts as a visible GitHub-style project card: project name, star count, and open-source/license badge should be visible on the first image. Do not invent missing star counts, repo names, licenses, or logos.
+
+## Sent History and Deduplication
+
+Every successful `--send` appends or updates a private JSONL record:
+
+```text
+content-history\sent-posts.jsonl
+```
+
+Each record stores the title, topic, content type, Feishu `message_id`, send time, normalized `topic_key`, and normalized source keys. For GitHub/open-source posts, `TauricResearch/TradingAgents`, `github.com/TauricResearch/TradingAgents`, and `https://github.com/TauricResearch/TradingAgents` all normalize to the same key:
+
+```text
+github.com/tauricresearch/tradingagents
+```
+
+Before automatic topic selection, list the recent history:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --history
+```
+
+Before generating prompts for a new `content_spec.json`, check it:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --check-history
+```
+
+`generate_current_assets.py` also runs the same duplicate check, so a repeated repo/source/topic is blocked even if the manual check is skipped. To intentionally revisit a topic, add this only when the user explicitly asks for a repeat:
+
+```json
+{
+  "history": {
+    "allow_repeat": true,
+    "topic_key": "custom-topic-key"
+  }
+}
+```
 
 ## Body Quality Standard
 

@@ -2,6 +2,7 @@
 # Generated workspaces may contain credentials and output files; do not commit them.
 .env
 feishu-delivery/.env
+content-history/sent-posts.jsonl
 **/outputs/
 **/__pycache__/
 .xhs_delivery.lock

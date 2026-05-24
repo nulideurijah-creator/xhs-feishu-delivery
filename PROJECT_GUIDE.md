@@ -48,6 +48,8 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | `assets/workspace-template/run_xhs_delivery.py` | Workspace-local packaging and Feishu runner. It mirrors the skill wrapper but does not require `--workspace`. |
 | `assets/workspace-template/asset-generation/content_spec.json` | Editable post specification. Users change this file to create a new post, including the content type, insight pack, source facts, body, tags, and 6 card prompts. |
 | `assets/workspace-template/asset-generation/generate_current_assets.py` | Validates the spec, writes copy/title/prompt outputs, and prepares image paths for model-generated cards. |
+| `assets/workspace-template/content-history/check_history.py` | Lists sent post history and checks the current spec against previous Feishu deliveries. |
+| `assets/workspace-template/content-history/history_utils.py` | Shared duplicate-key normalization, history read/write, and sent-record helpers. |
 | `assets/workspace-template/diagnostics/doctor.py` | Read-only workspace doctor. It writes diagnostics reports without sending Feishu messages or generating images. |
 | `assets/workspace-template/image-generation/.gitkeep` | Keeps the model-image directory in the template. Prompt files and PNG outputs are generated here at runtime. |
 | `assets/workspace-template/publish-mainline/build_manual_publish_package.py` | Builds the local manual publishing package from generated assets. |
@@ -74,6 +76,7 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 
 - `asset-generation/content_spec.json` in their generated workspace.
 - `feishu-delivery/.env` in their generated workspace.
+- `content-history/sent-posts.jsonl` is generated automatically after successful sends; users normally inspect it but do not hand-edit it.
 
 ## What Users Usually Do Not Edit
 

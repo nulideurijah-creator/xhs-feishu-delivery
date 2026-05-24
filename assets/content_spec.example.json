@@ -15,6 +15,10 @@
     "note": "This file is only a schema example. Verify real claims before delivery."
   },
   "project_facts": {},
+  "history": {
+    "topic_key": "",
+    "allow_repeat": false
+  },
   "content_type": "ai_product_release",
   "insight_pack": {
     "core_hook": "别让 AI 工具推荐停留在种草，要给读者一个能直接用的判断方法。",

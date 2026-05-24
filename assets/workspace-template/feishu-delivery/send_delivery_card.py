@@ -21,10 +21,14 @@ from urllib import error, parse, request
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "content-history"))
+from history_utils import build_sent_record, upsert_sent_record  # noqa: E402
+
 WORK_DIR = Path(__file__).resolve().parent
 OUT = WORK_DIR / "outputs"
 REQUEST_PATH = OUT / "delivery-request.json"
 CARD_PATH = OUT / "delivery-card.json"
+ASSET_PACKAGE_PATH = ROOT / "asset-generation" / "outputs" / "current-publish-assets.json"
 LOCAL_RESULT_PATH = OUT / "local-validation-result.json"
 DRY_RUN_RESULT_PATH = OUT / "dry-run-result.json"
 SEND_RESULT_PATH = OUT / "send-result.json"
@@ -271,6 +275,7 @@ def main(argv: list[str]) -> int:
     try:
         delivery = load_json(REQUEST_PATH)
         card = load_json(CARD_PATH)
+        asset_package = load_json(ASSET_PACKAGE_PATH) if ASSET_PACKAGE_PATH.exists() else {}
         validate_card(card)
         image_paths = validate_images(delivery)
         env = load_env()
@@ -331,6 +336,9 @@ def main(argv: list[str]) -> int:
         state["delivery_status"] = "sent"
         state["sent_at"] = result["created_at"]
         state["feishu_image_keys"] = image_keys
+        history_record = build_sent_record(asset_package, delivery, result)
+        upsert_sent_record(history_record)
+        state["history_record"] = history_record
         write_json(SEND_RESULT_PATH, result)
         write_json(DELIVERY_STATE_PATH, state)
         print(json.dumps(result, ensure_ascii=False, indent=2))

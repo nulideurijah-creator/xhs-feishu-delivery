@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import importlib.util
+import os
 import subprocess
 import sys
 import tempfile
@@ -40,6 +42,9 @@ class SkillStabilityTests(unittest.TestCase):
             "baoyu-image-cards",
             "imagegen",
             "Do not invent a hot topic",
+            "sent history",
+            "--check-history",
+            "content-history/sent-posts.jsonl",
         ]:
             self.assertIn(marker, text)
 
@@ -175,6 +180,142 @@ class SkillStabilityTests(unittest.TestCase):
             generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
             self.assertNotEqual(generated.returncode, 0)
             self.assertIn("body contains forbidden phrases", generated.stderr + generated.stdout)
+
+    def test_generate_assets_rejects_duplicate_github_repo_history(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp) / "workspace"
+            init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
+            self.assertEqual(init.returncode, 0, init.stderr)
+            history_dir = workspace / "content-history"
+            history_dir.mkdir(parents=True, exist_ok=True)
+            (history_dir / "sent-posts.jsonl").write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "record_type": "xhs_sent_post",
+                        "delivery_id": "publish-tradingagents-old",
+                        "content_id": "tradingagents-old",
+                        "title": "旧标题",
+                        "topic": "TradingAgents",
+                        "content_type": "github_project_recommendation",
+                        "topic_key": "github.com/tauricresearch/tradingagents",
+                        "source_keys": ["github.com/tauricresearch/tradingagents"],
+                        "sent_at": "2026-05-24T12:00:00+08:00",
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            spec_path = workspace / "asset-generation" / "content_spec.json"
+            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec["content_type"] = "github_project_recommendation"
+            spec["topic"] = "TradingAgents 开源项目"
+            spec["project_facts"] = {
+                "name": "TradingAgents",
+                "repo": "TauricResearch/TradingAgents",
+                "github_stars": "79,140 stars",
+                "license": "Apache-2.0",
+                "open_source": "true",
+            }
+            spec["source_urls"] = ["https://github.com/TauricResearch/TradingAgents"]
+            spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+            generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
+            self.assertNotEqual(generated.returncode, 0)
+            self.assertIn("duplicate content history", generated.stderr + generated.stdout)
+            self.assertIn("github.com/tauricresearch/tradingagents", generated.stderr + generated.stdout)
+
+    def test_history_normalizes_non_github_urls_without_fake_repo(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp) / "workspace"
+            init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
+            self.assertEqual(init.returncode, 0, init.stderr)
+            module_path = workspace / "content-history" / "history_utils.py"
+            spec = importlib.util.spec_from_file_location("workspace_history_utils", module_path)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.loader)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            self.assertEqual(
+                module.normalize_source_url("https://github.com/TauricResearch/TradingAgents"),
+                "github.com/tauricresearch/tradingagents",
+            )
+            self.assertEqual(
+                module.normalize_source_url("https://fortune.com/2026/05/ai-agent-costs"),
+                "fortune.com/2026/05/ai-agent-costs",
+            )
+            self.assertEqual(
+                module.normalize_github_repo("GitHub CLI/API"),
+                "",
+            )
+            source_keys = module.source_keys_from_spec(
+                {
+                    "content_type": "github_project_recommendation",
+                    "topic": "TradingAgents",
+                    "source_urls": ["https://github.com/TauricResearch/TradingAgents"],
+                    "source_verification": {"source": "GitHub CLI/API, repository README"},
+                    "insight_pack": {"source_facts": []},
+                }
+            )
+            self.assertFalse(any("github cli" in key for key in source_keys))
+
+    def test_send_records_successful_delivery_in_history(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp) / "workspace"
+            init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
+            self.assertEqual(init.returncode, 0, init.stderr)
+            generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
+            self.assertEqual(generated.returncode, 0, generated.stderr)
+            package_path = workspace / "asset-generation" / "outputs" / "current-publish-assets.json"
+            package = json.loads(package_path.read_text(encoding="utf-8"))
+            for image in package["images"]:
+                image_path = workspace / image["image_path"]
+                image_path.parent.mkdir(parents=True, exist_ok=True)
+                image_path.write_bytes(b"png")
+            generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
+            self.assertEqual(generated.returncode, 0, generated.stderr)
+            self.assertEqual(
+                run([sys.executable, str(workspace / "publish-mainline" / "build_manual_publish_package.py")], cwd=workspace).returncode,
+                0,
+            )
+            self.assertEqual(run([sys.executable, str(workspace / "publish-mainline" / "preflight.py")], cwd=workspace).returncode, 0)
+            self.assertEqual(run([sys.executable, str(workspace / "feishu-delivery" / "build_delivery_card.py")], cwd=workspace).returncode, 0)
+
+            module_path = workspace / "feishu-delivery" / "send_delivery_card.py"
+            spec = importlib.util.spec_from_file_location("workspace_send_delivery_card", module_path)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.loader)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            old_env = os.environ.copy()
+            try:
+                os.environ.update(
+                    {
+                        "FEISHU_APP_ID": "app",
+                        "FEISHU_APP_SECRET": "secret",
+                        "FEISHU_RECEIVE_ID_TYPE": "open_id",
+                        "FEISHU_RECEIVE_ID": "ou_test",
+                    }
+                )
+                module.get_tenant_access_token = lambda env: "token"
+                module.upload_image = lambda token, image_path: f"img_{image_path.stem}"
+                module.send_message = lambda env, token, card: {"code": 0, "data": {"message_id": "om_test"}}
+
+                self.assertEqual(module.main(["--send"]), 0)
+            finally:
+                os.environ.clear()
+                os.environ.update(old_env)
+
+            history_path = workspace / "content-history" / "sent-posts.jsonl"
+            self.assertTrue(history_path.exists())
+            records = [json.loads(line) for line in history_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0]["message_id"], "om_test")
+            self.assertEqual(records[0]["delivery_id"], package["review_id"])
+            self.assertIn(records[0]["topic_key"], records[0]["source_keys"])
 
     def test_doctor_reports_missing_images_without_failing_command(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

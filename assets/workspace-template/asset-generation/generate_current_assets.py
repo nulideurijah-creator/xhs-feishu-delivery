@@ -8,11 +8,15 @@ model image generation, local publishing-package generation, and Feishu delivery
 from __future__ import annotations
 
 import json
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "content-history"))
+from history_utils import assert_not_duplicate  # noqa: E402
+
 SPEC_PATH = ROOT / "asset-generation" / "content_spec.json"
 OUT = ROOT / "asset-generation" / "outputs"
 PACKAGE_PATH = OUT / "current-publish-assets.json"
@@ -334,7 +338,7 @@ Constraints:
 """
 
 
-def build_package(spec: dict[str, Any]) -> dict[str, Any]:
+def build_package(spec: dict[str, Any], history_check: dict[str, Any]) -> dict[str, Any]:
     """Create the machine-readable asset package consumed by later steps."""
     prompt_dir = ROOT / "image-generation" / "prompts" / spec["image_slug"]
     image_dir = ROOT / "image-generation" / "outputs" / "images" / spec["image_slug"]
@@ -370,6 +374,7 @@ def build_package(spec: dict[str, Any]) -> dict[str, Any]:
         "hot_source": spec.get("hot_source", ""),
         "source_urls": spec.get("source_urls", []),
         "source_verification": spec.get("source_verification", {}),
+        "history_check": history_check,
         "insight_pack": spec["insight_pack"],
         "body_full": spec["body_full"],
         "body_char_count": len(spec["body_full"]),
@@ -431,7 +436,8 @@ def render_prompt_package(package: dict[str, Any]) -> str:
 def main() -> int:
     spec = load_json(SPEC_PATH)
     validate_spec(spec)
-    package = build_package(spec)
+    history_check = assert_not_duplicate(spec)
+    package = build_package(spec, history_check)
     write_json(PACKAGE_PATH, package)
     write_text(COPY_PATH, render_copy(spec))
     write_text(TITLE_PATH, render_titles(spec))

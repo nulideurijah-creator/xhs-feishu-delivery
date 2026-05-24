@@ -15,6 +15,10 @@
     "note": "This starter file is only a format example. Verify real claims before delivery."
   },
   "project_facts": {},
+  "history": {
+    "topic_key": "",
+    "allow_repeat": false
+  },
   "content_type": "ai_product_release",
   "insight_pack": {
     "core_hook": "别被 AI 工具演示骗了，真正要看它能不能进你的日常流程。",

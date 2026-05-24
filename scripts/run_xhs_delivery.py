@@ -42,6 +42,12 @@ DOCTOR_REQUIRED_FILES = [
     "diagnostics/doctor.py",
 ]
 
+HISTORY_REQUIRED_FILES = [
+    # Sent-post history inspection and duplicate detection.
+    "content-history/check_history.py",
+    "content-history/history_utils.py",
+]
+
 LOCK_TTL_SECONDS = 2 * 60 * 60
 
 
@@ -112,6 +118,8 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--init-workspace", action="store_true", help="Create the workspace from this skill's bundled template")
     mode.add_argument("--check-feishu", action="store_true", help="Check Feishu credentials without building or sending")
     mode.add_argument("--doctor", action="store_true", help="Run read-only workspace diagnostics and write a doctor report")
+    mode.add_argument("--history", action="store_true", help="List recent sent Xiaohongshu delivery history")
+    mode.add_argument("--check-history", action="store_true", help="Check current content_spec.json against sent history")
     mode.add_argument("--install-startup-check", action="store_true", help="Install a Windows logon Feishu health check")
     mode.add_argument("--install-system-startup-check", action="store_true", help="Install a Windows startup health check; requires administrator")
     mode.add_argument("--uninstall-startup-check", action="store_true", help="Remove the Windows logon Feishu health check")
@@ -140,6 +148,14 @@ def main(argv: list[str]) -> int:
         require_files(workspace, DOCTOR_REQUIRED_FILES)
         run_step(workspace, "doctor", [sys.executable, ".\\diagnostics\\doctor.py"])
         return 0
+    if args.history:
+        require_files(workspace, HISTORY_REQUIRED_FILES)
+        run_step(workspace, "history", [sys.executable, ".\\content-history\\check_history.py", "--list"])
+        return 0
+    if args.check_history:
+        require_files(workspace, HISTORY_REQUIRED_FILES)
+        run_step(workspace, "check_history", [sys.executable, ".\\content-history\\check_history.py", "--check-current"])
+        return 0
     if args.install_startup_check:
         require_files(workspace, STARTUP_REQUIRED_FILES)
         run_step(workspace, "install_startup_check", [sys.executable, ".\\feishu-delivery\\install_startup_check.py"])
@@ -153,7 +169,7 @@ def main(argv: list[str]) -> int:
         run_step(workspace, "uninstall_startup_check", [sys.executable, ".\\feishu-delivery\\install_startup_check.py", "--uninstall"])
         return 0
 
-    require_files(workspace, BUILD_REQUIRED_FILES)
+    require_files(workspace, BUILD_REQUIRED_FILES + HISTORY_REQUIRED_FILES)
     send_mode = "--local-only"
     if args.dry_run:
         send_mode = "--dry-run"
