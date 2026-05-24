@@ -25,7 +25,7 @@ Each `pages` item must include:
 - `subtitle`: short card subtitle.
 - `visual`: visual direction for the image prompt.
 
-The workflow expects these images to exist:
+The workflow renders these images from `content_spec.json` before packaging:
 
 `image-generation/outputs/images/<image_slug>/<page_id>.png`
 
@@ -34,3 +34,7 @@ Do not add music fields, auto-publish fields, Xiaohongshu login fields, or analy
 Feishu delivery does not require a persistent connection. After restarting the machine, run:
 
 `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-feishu`
+
+For long-term local use on Windows, install the logon health check once:
+
+`python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-startup-check`

@@ -7,10 +7,12 @@ This workflow is intentionally manual-publish only. It does not automate Xiaohon
 ## What It Does
 
 - Validates a Xiaohongshu content spec.
+- Renders 6 deterministic PNG image cards from the content spec.
 - Builds a local post package from an existing workspace.
 - Validates title, body, tags, and exactly 6 image cards.
 - Builds a buttonless Feishu delivery card.
 - Sends the full title, body, tags, image list, and 6 image previews to Feishu.
+- Can install a Windows logon health check for Feishu credentials.
 
 ## What It Does Not Do
 
@@ -45,12 +47,14 @@ workspace/
 │   ├── content_spec.json
 │   └── generate_current_assets.py
 ├── image-generation/
+│   ├── render_current_cards.py
 │   └── outputs/images/<image_slug>/<page_id>.png
 ├── publish-mainline/
 │   ├── build_manual_publish_package.py
 │   └── preflight.py
 └── feishu-delivery/
     ├── check_feishu_ready.py
+    ├── install_startup_check.py
     ├── build_delivery_card.py
     ├── send_delivery_card.py
     └── .env
@@ -70,6 +74,12 @@ Validate Feishu credentials without sending:
 
 ```powershell
 python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --check-feishu
+```
+
+Install automatic Feishu health check after Windows logon:
+
+```powershell
+python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --install-startup-check
 ```
 
 Build the package and validate Feishu credentials without sending:
@@ -110,7 +120,7 @@ python scripts/validate_skill_safety.py --skill-dir .
 python -m py_compile scripts/run_xhs_delivery.py scripts/validate_skill_safety.py
 ```
 
-Feishu delivery does not use a persistent connection. Reboots do not break a daemon because there is no daemon; each send fetches a fresh tenant token.
+Feishu delivery does not use a persistent connection. Reboots do not break a daemon because there is no daemon; each send fetches a fresh tenant token. For long-term desktop use, install the logon health check once. If Windows blocks Task Scheduler or the Startup folder, the workspace installer may fall back to the current user's `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` startup entry.
 
 ## License
 

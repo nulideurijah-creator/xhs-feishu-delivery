@@ -23,11 +23,13 @@ Use this skill to operate the local workflow that creates a Xiaohongshu image-te
 1. Confirm or create the target workspace that contains the four workflow directories:
    `asset-generation`, `image-generation`, `publish-mainline`, and `feishu-delivery`.
 2. Make sure `asset-generation/content_spec.json` contains the current topic, title, body, tags, image slug, and exactly 6 image page definitions.
-3. Make sure 6 approved PNG images exist under `image-generation/outputs/images/<image_slug>/`.
-4. Run the wrapper:
+3. Run the wrapper. It must generate assets, render the 6 PNG image cards, refresh asset status, build the local package, build the Feishu card, and then validate or send:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --local-only`
-5. After a machine restart, check Feishu credentials without building or sending:
+4. After a machine restart, check Feishu credentials without building or sending:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-feishu`
+5. Install a Windows logon health check when the workflow should recover after reboot:
+   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-startup-check`
+   If Task Scheduler or the Startup folder is blocked by local permissions, the workspace installer may fall back to the current user's Windows Run registry entry.
 6. If Feishu credentials should be checked after building the package:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --dry-run`
 7. Only when the user explicitly wants delivery to Feishu:
@@ -40,6 +42,7 @@ Use this skill to operate the local workflow that creates a Xiaohongshu image-te
 - Body must be 1000 characters or fewer.
 - Tags must be a non-empty list.
 - Image cards must be exactly 6 PNG files.
+- The wrapper must not require pre-existing PNG files; it should render them from `content_spec.json` through `image-generation/render_current_cards.py`.
 - Feishu card must contain only: topic, title, full body, image list, 6 image previews, and tags.
 
 ## References
