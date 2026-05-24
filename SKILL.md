@@ -42,9 +42,11 @@ Use this chain for a new post:
 4. **Title candidates**: use `dbs-xhs-title` style rules for Xiaohongshu title formulas and candidates.
 5. **Body copy**:
    - Read `references/editor_prompt.md` before writing `body_full`.
+   - Use the accepted voice target in `references/editor_prompt.md` as the style anchor.
    - Use `write-xiaohongshu` only as the final Xiaohongshu expression layer after the insight pack exists.
    - Apply `humanizer-zh` to remove generic AI-sounding phrasing.
    - Do not let `write-xiaohongshu` invent the depth layer or replace the insight pack.
+   - Before finalizing, privately rewrite once if the draft sounds like a tool-review template, checklist, product manual, or source recap.
    - The final body should sound like a real AI-tools Xiaohongshu creator sharing a useful discovery, not a report, listicle, product manual, or training handout.
 6. **Image-card structure and prompts**: use `baoyu-image-cards` with the bundled `xhs-warm-cute-open-source` preference.
    - For GitHub stars, open-source projects, or repo-based topics, put the verified repo/project name, star count, license/open-source badge, and source cue on the first card. Do not hide these facts in later pages or invent unverified counts.

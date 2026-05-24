@@ -52,6 +52,8 @@ class SkillStabilityTests(unittest.TestCase):
             "如果读起来像 AI 在解释，请重写",
             "它做的事很直接",
             "这个数据仅是一个参考",
+            "我会把它放在三个场景里用",
+            "Accepted Voice Target",
         ]:
             self.assertIn(marker, text)
 
@@ -167,7 +169,7 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertEqual(init.returncode, 0, init.stderr)
             spec_path = workspace / "asset-generation" / "content_spec.json"
             spec = json.loads(spec_path.read_text(encoding="utf-8"))
-            spec["body_full"] = "它最适合三类人。这个工具值得关注。总结一下，AI 工具要看长期价值。"
+            spec["body_full"] = "它最适合三类人。这个工具值得关注。我会把它放在三个场景里用。总结一下，AI 工具要看长期价值。"
             spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
             generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
