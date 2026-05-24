@@ -17,6 +17,29 @@ Use this skill to operate the local workflow that creates a Xiaohongshu image-te
 - Do not add Feishu buttons, callbacks, WebSocket receivers, or approval state machines.
 - Do not include music fields.
 - Do not treat this workflow as data analytics, Obsidian memory, competitor analysis, or self-improvement tracking.
+- Do not replace the mature skill chain with ad hoc model guesses when a listed skill is available.
+
+## Required Mature Skill Chain
+
+This skill is the orchestrator and delivery layer. It must reuse the mature
+skills agreed for the owner's workflow instead of inventing substitutes.
+
+Use this chain for a new post:
+
+1. **Topic / source selection**:
+   - If the user gives a specific topic and source, use it.
+   - If the user asks for an AI-circle topic, hot news, GitHub trend, major AI update, or gives no concrete topic, use `aihot` first to pull current AI news and choose one Xiaohongshu-suitable vertical topic.
+   - If the chosen angle depends on GitHub stars, repo activity, or developer-platform facts, use `agent-reach` as an additional verification/research skill after `aihot`.
+   - Do not invent a hot topic from general model knowledge when `aihot` is available.
+2. **Title candidates**: use `dbs-xhs-title` style rules for Xiaohongshu title formulas and candidates.
+3. **Body copy**: use `write-xiaohongshu` writing constraints, then apply `humanizer-zh` to remove generic AI-sounding phrasing.
+4. **Image-card structure and prompts**: use `baoyu-image-cards` with the bundled `xhs-ai-hook-sketch` preference.
+5. **Final PNG generation**: use Codex `imagegen` or the user's equivalent real image model as the raster backend.
+6. **Packaging and Feishu delivery**: use this `xhs-feishu-delivery` workflow.
+
+If any required mature skill is unavailable in the current runtime, stop and
+state exactly which skill is missing. Do not silently replace it with shell
+scripts, browser screenshots, generic writing, or template rendering.
 
 ## Workflow
 
@@ -28,7 +51,7 @@ local image renderer, treat that instruction as obsolete.
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`
 2. The target workspace must contain the four workflow directories:
    `asset-generation`, `image-generation`, `publish-mainline`, and `feishu-delivery`.
-3. Make sure `asset-generation/content_spec.json` contains the current topic, title, body, tags, image slug, and exactly 6 image page definitions.
+3. Prepare `asset-generation/content_spec.json` using the Required Mature Skill Chain above. It must contain the current topic, title, body, tags, image slug, source verification, and exactly 6 image page definitions.
 4. Run the asset generator first. It writes the copy package and the six prompt files:
    `python "<workspace>\\asset-generation\\generate_current_assets.py"`
 5. Generate the six image cards with the mature image-card path used by the owner:

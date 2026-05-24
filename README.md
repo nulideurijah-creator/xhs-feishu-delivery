@@ -19,13 +19,26 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, or browser
 
 ```mermaid
 flowchart LR
-  A["content_spec.json"] --> B["Generate copy + prompts"]
-  B --> C["Generate 6 model image cards"]
-  C --> D["Build manual package"]
-  D --> E["Build Feishu card"]
-  E --> F["Send to Feishu"]
-  F --> G["User posts manually on Xiaohongshu"]
+  A["aihot selects AI topic"] --> B["dbs-xhs-title creates title candidates"]
+  B --> C["write-xiaohongshu + humanizer-zh create body"]
+  C --> D["content_spec.json"]
+  D --> E["baoyu-image-cards creates image prompts"]
+  E --> F["imagegen creates 6 PNG cards"]
+  F --> G["Build manual package"]
+  G --> H["Send complete Feishu card"]
+  H --> I["User posts manually on Xiaohongshu"]
 ```
+
+## Mature Skills Used
+
+- `aihot`: default source for AI-circle hot topics and news selection.
+- `agent-reach`: optional verification for GitHub stars, repo activity, or developer-platform facts.
+- `dbs-xhs-title`: Xiaohongshu title formulas and candidates.
+- `write-xiaohongshu`: Xiaohongshu body-writing constraints.
+- `humanizer-zh`: removes generic AI-sounding phrasing.
+- `baoyu-image-cards`: structures the 6-card Xiaohongshu image series.
+- `imagegen`: generates the final raster PNG cards.
+- `xhs-feishu-delivery`: packages the result and sends it to Feishu.
 
 ## Repository Guide
 

@@ -4,6 +4,12 @@ The workspace file `asset-generation/content_spec.json` is the single source of 
 
 Use this reference when editing the JSON file by hand. JSON does not support real comments, so explanatory notes live here and in `PROJECT_GUIDE.md`.
 
+Before editing this file for a real post, follow the mature skill chain in
+`SKILL.md`: use `aihot` for AI-topic discovery unless the user already supplied
+a concrete topic/source, use `dbs-xhs-title` for title candidates, use
+`write-xiaohongshu` plus `humanizer-zh` for the body, and use
+`baoyu-image-cards` plus `imagegen` for the final images.
+
 For a new workspace, initialize the bundled template first:
 
 `python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`
@@ -15,7 +21,7 @@ Required fields:
 - `title`: final Xiaohongshu title, 20 Chinese characters or fewer.
 - `summary`: short internal summary.
 - `topic`: topic to explain.
-- `hot_source`: source label for the topic.
+- `hot_source`: source label for the topic, usually the selected `aihot` item or the user-supplied source.
 - `source_urls`: list of source URLs.
 - `source_verification`: source notes and factual caveats.
 - `body_full`: final Xiaohongshu body, 1000 characters or fewer.

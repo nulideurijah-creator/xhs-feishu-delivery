@@ -232,7 +232,7 @@ def build_package(spec: dict[str, Any]) -> dict[str, Any]:
             "image_prompt_package": str(PROMPT_PACKAGE_PATH.relative_to(ROOT)),
         },
         "skill_sources": {
-            "topic": "aihot",
+            "topic": "aihot; agent-reach when GitHub/repo verification is needed",
             "title": "dbs-xhs-title style rules",
             "copy": "write-xiaohongshu + humanizer-zh editing rules",
             "image_prompts": "baoyu-image-cards + Codex imagegen",
