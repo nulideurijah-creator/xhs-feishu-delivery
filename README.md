@@ -15,6 +15,18 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, or browser
 - Feishu health checks that can run after Windows logon.
 - Safety checks that prevent accidental Xiaohongshu automation or secret leakage.
 
+## Mental Model
+
+There are three layers:
+
+| Layer | Example Path | Purpose |
+|---|---|---|
+| GitHub repository | `xhs-feishu-delivery` | Source of truth for the skill, scripts, workspace template, tests, and docs. |
+| Installed Codex skill | `%USERPROFILE%\.codex\skills\xhs-feishu-delivery` | The copy Codex reads when you invoke this skill. Update it from the GitHub repo after pulling changes. |
+| Local workspace | `D:\path\to\xhs-workspace` | Your production folder. It stores Feishu `.env`, current post spec, generated prompts, final images, and delivery outputs. Do not commit this folder. |
+
+The GitHub repo gives other users the same workflow and image-prompt style. It does not include your Feishu credentials, generated images, or private post history.
+
 ## Workflow
 
 ```mermaid
@@ -46,7 +58,101 @@ Every file in this repository is explained in [PROJECT_GUIDE.md](PROJECT_GUIDE.m
 
 The image-generation handoff is documented in [references/image_generation.md](references/image_generation.md).
 
-## Install Skill
+## Prerequisites
+
+- Windows PowerShell examples are shown below. The scripts are Python and can be adapted to other shells.
+- Python 3.10+ available as `python`.
+- Codex with local skills support.
+- Supporting skills available in the Codex runtime:
+  - `aihot`
+  - `agent-reach`
+  - `dbs-xhs-title`
+  - `write-xiaohongshu`
+  - `humanizer-zh`
+  - `baoyu-image-cards`
+  - `imagegen`
+- A Feishu app or bot with credentials that can send messages/images to your target receiver.
+- A real image-generation backend. This project prepares prompts and file paths; it does not draw final cards with local template code.
+
+If any supporting skill or image backend is unavailable, stop and fix that first. Do not replace final images with PIL, SVG, HTML, browser screenshots, or placeholder diagrams.
+
+## Quick Start
+
+Use this path for a first clean install.
+
+```powershell
+# 1. Clone the source repo.
+git clone https://github.com/nulideurijah-creator/xhs-feishu-delivery.git
+cd .\xhs-feishu-delivery
+
+# 2. Install the skill into Codex.
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.codex\skills" | Out-Null
+Copy-Item -Recurse -Force . "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery"
+```
+
+Restart Codex after installing the skill.
+
+```powershell
+# 3. Create a private local workspace.
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --init-workspace
+cd "D:\path\to\xhs-workspace"
+python -m pip install -r requirements.txt
+
+# 4. Configure Feishu credentials.
+Copy-Item .\feishu-delivery\.env.example .\feishu-delivery\.env
+notepad .\feishu-delivery\.env
+```
+
+Fill these values in `.env`:
+
+```text
+FEISHU_APP_ID=
+FEISHU_APP_SECRET=
+FEISHU_RECEIVE_ID_TYPE=open_id
+FEISHU_RECEIVE_ID=
+```
+
+Verify Feishu credentials without sending a message:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --check-feishu
+```
+
+Create the post assets:
+
+```powershell
+# 5. Edit this file for your topic, body, tags, and six image cards.
+notepad .\asset-generation\content_spec.json
+
+# 6. Generate copy output and image prompt files.
+python .\asset-generation\generate_current_assets.py
+```
+
+Generate the six image cards with `baoyu-image-cards` and Codex `imagegen`, then save each PNG to the `image_path` values listed in:
+
+```text
+asset-generation\outputs\current-publish-assets.json
+```
+
+Validate the complete local package:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --local-only
+```
+
+Validate Feishu access after the images are ready, without sending:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --dry-run
+```
+
+Send the complete delivery card to Feishu only when you are ready:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --send
+```
+
+## Command Reference: Install Skill
 
 ```powershell
 git clone https://github.com/nulideurijah-creator/xhs-feishu-delivery.git
@@ -55,7 +161,7 @@ Copy-Item -Recurse -Force .\xhs-feishu-delivery "$env:USERPROFILE\.codex\skills\
 
 Restart Codex after installing.
 
-## Create Workspace
+## Command Reference: Create Workspace
 
 ```powershell
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --init-workspace
@@ -79,7 +185,27 @@ FEISHU_RECEIVE_ID_TYPE=open_id
 FEISHU_RECEIVE_ID=
 ```
 
-## Run
+## GitHub/Open-Source Cover Facts
+
+For GitHub stars, open-source projects, or repo-based topics, add verified facts to `asset-generation/content_spec.json` before running `generate_current_assets.py`:
+
+```json
+{
+  "project_facts": {
+    "name": "models.dev",
+    "repo": "github.com/example/repo",
+    "github_stars": "4.1k stars",
+    "license": "MIT",
+    "open_source": "true",
+    "url": "https://github.com/example/repo",
+    "description": "Short factual project note"
+  }
+}
+```
+
+The bundled `xhs-warm-cute-open-source` style asks the cover prompt to show those facts as a visible GitHub-style project card: project name, star count, and open-source/license badge should be visible on the first image. Do not invent missing star counts, repo names, licenses, or logos.
+
+## Command Reference: Run
 
 Validate without Feishu:
 
@@ -115,6 +241,22 @@ Send the complete package to Feishu:
 ```powershell
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --send
 ```
+
+## Common Checks
+
+Run the doctor before using a workspace from a new Codex window:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --doctor
+```
+
+Typical blocker meanings:
+
+- `images_missing:6`: image prompts exist, but the six final PNG files have not been generated or copied into the required output paths.
+- `feishu_env_missing`: create `feishu-delivery\.env` from `.env.example` and fill the required `FEISHU_` values.
+- `feishu_env_missing_keys`: one or more required Feishu fields are empty.
+- `tenant token request failed`: the Feishu app id/secret is wrong, expired, or lacks access in the tenant.
+- `workflow already running or lock exists`: another run is active, or `.xhs_delivery.lock` was left behind after an interrupted run. Delete the lock only after confirming no workflow is running.
 
 ## Startup Check
 
