@@ -13,6 +13,7 @@ This workflow is intentionally manual-publish only. It does not automate Xiaohon
 - Builds a buttonless Feishu delivery card.
 - Sends the full title, body, tags, image list, and 6 image previews to Feishu.
 - Can install a Windows logon health check for Feishu credentials.
+- Uses a workspace lock to prevent concurrent runs from corrupting in-progress image/package outputs.
 
 ## What It Does Not Do
 
@@ -82,6 +83,12 @@ Install automatic Feishu health check after Windows logon:
 python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --install-startup-check
 ```
 
+Install a machine-startup health check before any user logs in. This requires administrator privileges in the target workspace installer:
+
+```powershell
+python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --install-system-startup-check
+```
+
 Build the package and validate Feishu credentials without sending:
 
 ```powershell
@@ -120,7 +127,7 @@ python scripts/validate_skill_safety.py --skill-dir .
 python -m py_compile scripts/run_xhs_delivery.py scripts/validate_skill_safety.py
 ```
 
-Feishu delivery does not use a persistent connection. Reboots do not break a daemon because there is no daemon; each send fetches a fresh tenant token. For long-term desktop use, install the logon health check once. If Windows blocks Task Scheduler or the Startup folder, the workspace installer may fall back to the current user's `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` startup entry.
+Feishu delivery does not use a persistent connection. Reboots do not break a daemon because there is no daemon; each send fetches a fresh tenant token. For long-term desktop use, install the logon health check once. If Windows blocks Task Scheduler or the Startup folder, the workspace installer may fall back to the current user's `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` startup entry. For pre-login machine startup, install the SYSTEM scheduled task from an administrator shell.
 
 ## License
 

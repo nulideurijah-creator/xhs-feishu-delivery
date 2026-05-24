@@ -38,3 +38,7 @@ Feishu delivery does not require a persistent connection. After restarting the m
 For long-term local use on Windows, install the logon health check once:
 
 `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-startup-check`
+
+For machine startup before any user logs in, use the administrator-only SYSTEM task installer:
+
+`python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-system-startup-check`

@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
+import time
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -26,6 +29,8 @@ CHECK_REQUIRED_FILES = [
 STARTUP_REQUIRED_FILES = [
     "feishu-delivery/install_startup_check.py",
 ]
+
+LOCK_TTL_SECONDS = 2 * 60 * 60
 
 
 def resolve_workspace(raw: str) -> Path:
@@ -57,6 +62,30 @@ def run_step(workspace: Path, name: str, args: list[str]) -> None:
         raise SystemExit(completed.returncode)
 
 
+@contextmanager
+def workflow_lock(workspace: Path):
+    lock_path = workspace / ".xhs_delivery.lock"
+    if lock_path.exists():
+        age = time.time() - lock_path.stat().st_mtime
+        if age > LOCK_TTL_SECONDS:
+            lock_path.unlink()
+        else:
+            raise SystemExit(
+                f"workflow already running or lock exists: {lock_path}. "
+                "If no workflow is running, delete this lock file and retry."
+            )
+    fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    try:
+        os.write(fd, f"pid={os.getpid()}\n".encode("utf-8"))
+    finally:
+        os.close(fd)
+    try:
+        yield
+    finally:
+        if lock_path.exists():
+            lock_path.unlink()
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run XHS Feishu delivery workflow")
     parser.add_argument(
@@ -67,6 +96,7 @@ def build_parser() -> argparse.ArgumentParser:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check-feishu", action="store_true", help="Check Feishu credentials without building or sending")
     mode.add_argument("--install-startup-check", action="store_true", help="Install a Windows logon Feishu health check")
+    mode.add_argument("--install-system-startup-check", action="store_true", help="Install a Windows startup health check; requires administrator")
     mode.add_argument("--uninstall-startup-check", action="store_true", help="Remove the Windows logon Feishu health check")
     mode.add_argument("--local-only", action="store_true", help="Build and validate without Feishu credentials")
     mode.add_argument("--dry-run", action="store_true", help="Build and validate Feishu credentials")
@@ -85,6 +115,10 @@ def main(argv: list[str]) -> int:
         require_files(workspace, STARTUP_REQUIRED_FILES)
         run_step(workspace, "install_startup_check", [sys.executable, ".\\feishu-delivery\\install_startup_check.py"])
         return 0
+    if args.install_system_startup_check:
+        require_files(workspace, STARTUP_REQUIRED_FILES)
+        run_step(workspace, "install_system_startup_check", [sys.executable, ".\\feishu-delivery\\install_startup_check.py", "--system"])
+        return 0
     if args.uninstall_startup_check:
         require_files(workspace, STARTUP_REQUIRED_FILES)
         run_step(workspace, "uninstall_startup_check", [sys.executable, ".\\feishu-delivery\\install_startup_check.py", "--uninstall"])
@@ -97,13 +131,14 @@ def main(argv: list[str]) -> int:
     if args.send:
         send_mode = "--send"
 
-    run_step(workspace, "generate_assets", [sys.executable, ".\\asset-generation\\generate_current_assets.py"])
-    run_step(workspace, "render_image_cards", [sys.executable, ".\\image-generation\\render_current_cards.py"])
-    run_step(workspace, "refresh_assets", [sys.executable, ".\\asset-generation\\generate_current_assets.py"])
-    run_step(workspace, "build_manual_package", [sys.executable, ".\\publish-mainline\\build_manual_publish_package.py"])
-    run_step(workspace, "preflight", [sys.executable, ".\\publish-mainline\\preflight.py"])
-    run_step(workspace, "build_delivery_card", [sys.executable, ".\\feishu-delivery\\build_delivery_card.py"])
-    run_step(workspace, "send_delivery_card", [sys.executable, ".\\feishu-delivery\\send_delivery_card.py", send_mode])
+    with workflow_lock(workspace):
+        run_step(workspace, "generate_assets", [sys.executable, ".\\asset-generation\\generate_current_assets.py"])
+        run_step(workspace, "render_image_cards", [sys.executable, ".\\image-generation\\render_current_cards.py"])
+        run_step(workspace, "refresh_assets", [sys.executable, ".\\asset-generation\\generate_current_assets.py"])
+        run_step(workspace, "build_manual_package", [sys.executable, ".\\publish-mainline\\build_manual_publish_package.py"])
+        run_step(workspace, "preflight", [sys.executable, ".\\publish-mainline\\preflight.py"])
+        run_step(workspace, "build_delivery_card", [sys.executable, ".\\feishu-delivery\\build_delivery_card.py"])
+        run_step(workspace, "send_delivery_card", [sys.executable, ".\\feishu-delivery\\send_delivery_card.py", send_mode])
     return 0
 
 

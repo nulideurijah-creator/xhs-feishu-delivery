@@ -30,6 +30,8 @@ Use this skill to operate the local workflow that creates a Xiaohongshu image-te
 5. Install a Windows logon health check when the workflow should recover after reboot:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-startup-check`
    If Task Scheduler or the Startup folder is blocked by local permissions, the workspace installer may fall back to the current user's Windows Run registry entry.
+   For "machine booted but no user has logged in", install the administrator-only SYSTEM startup task:
+   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-system-startup-check`
 6. If Feishu credentials should be checked after building the package:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --dry-run`
 7. Only when the user explicitly wants delivery to Feishu:
@@ -43,6 +45,7 @@ Use this skill to operate the local workflow that creates a Xiaohongshu image-te
 - Tags must be a non-empty list.
 - Image cards must be exactly 6 PNG files.
 - The wrapper must not require pre-existing PNG files; it should render them from `content_spec.json` through `image-generation/render_current_cards.py`.
+- The wrapper must use the workspace lock `.xhs_delivery.lock`; do not run direct workflow and skill workflow concurrently in the same workspace.
 - Feishu card must contain only: topic, title, full body, image list, 6 image previews, and tags.
 
 ## References
