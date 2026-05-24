@@ -14,6 +14,7 @@
     "published_at": "",
     "note": "This file is only a schema example. Verify real claims before delivery."
   },
+  "project_facts": {},
   "body_full": "这里写最终小红书正文。保持口语、具体、有判断，不要写成模板套话。正文总长度必须控制在 1000 字以内。",
   "tags": [
     "AI工具",

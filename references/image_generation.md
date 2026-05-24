@@ -18,6 +18,7 @@ template renderer for final images.
    - preferred structure skill: `baoyu-image-cards`
    - preferred raster backend in Codex: `imagegen`
    - fallback: the user's own equivalent image model, if Codex imagegen is not available
+   - bundled visual style: `xhs-warm-cute-open-source`
 
    When `baoyu-image-cards` and `imagegen` are available in the runtime, use
    those skills/tools directly. Do not replace this step with shell, Python,
@@ -25,6 +26,11 @@ template renderer for final images.
 
    If no real image model/backend is available, stop here and report the block.
    Do not write code that draws substitute cards locally.
+
+   For GitHub stars, open-source projects, or repository-based topics, the first
+   card should make the verified project facts visible: repo/project name, star
+   count, license/open-source badge, and source cue. Do not invent missing
+   counts or bury the project details on later pages.
 
 4. Save every final PNG exactly to the `image_path` values listed in:
 

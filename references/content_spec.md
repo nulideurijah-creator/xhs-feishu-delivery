@@ -24,6 +24,7 @@ Required fields:
 - `hot_source`: source label for the topic, usually the selected `aihot` item or the user-supplied source.
 - `source_urls`: list of source URLs.
 - `source_verification`: source notes and factual caveats.
+- `project_facts`: optional object for GitHub/open-source topics. Use verified values only; supported keys include `name`, `repo`, `github_stars`, `license`, `open_source`, `url`, and `description`.
 - `body_full`: final Xiaohongshu body, 1000 characters or fewer.
 - `tags`: non-empty tag list, without leading `#`.
 - `title_candidates`: optional title alternatives.
@@ -36,6 +37,12 @@ Each `pages` item must include:
 - `title`: short card title.
 - `subtitle`: short card subtitle.
 - `visual`: visual direction for the image prompt.
+- `layout`: optional per-card baoyu layout override such as `flow`, `comparison`, `list`, or `balanced`.
+
+For GitHub stars, open-source projects, or repo-based topics, fill
+`project_facts` before generating prompts. The cover prompt will then ask the
+image model to show the project card, star count, and open-source/license badge
+on the first image instead of hiding those facts in later cards.
 
 The workflow writes prompt files from `content_spec.json`. Codex should then use
 `baoyu-image-cards` / `imagegen` to generate the final PNG files before

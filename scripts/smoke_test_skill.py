@@ -27,6 +27,8 @@ EXPECTED_MARKERS = [
     "imagegen",
 ]
 
+EXPECTED_IMAGE_STYLE = "xhs-warm-cute-open-source"
+
 
 def run(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
@@ -72,7 +74,7 @@ def smoke_test(skill_dir: Path, keep_workspace: bool) -> tuple[dict[str, Any], i
         assert_ok(config_path.exists(), failures, "baoyu_extend_missing")
         if config_path.exists():
             config_text = config_path.read_text(encoding="utf-8")
-            assert_ok("xhs-ai-hook-sketch" in config_text, failures, "baoyu_style_missing")
+            assert_ok(EXPECTED_IMAGE_STYLE in config_text, failures, "baoyu_style_missing")
             assert_ok("preferred_image_backend: codex-imagegen" in config_text, failures, "image_backend_missing")
 
         assert_ok(asset_script.exists(), failures, "asset_generator_missing")
@@ -94,8 +96,9 @@ def smoke_test(skill_dir: Path, keep_workspace: bool) -> tuple[dict[str, Any], i
         assert_ok(cover_prompt.exists(), failures, "cover_prompt_missing")
         if cover_prompt.exists():
             prompt_text = cover_prompt.read_text(encoding="utf-8")
-            assert_ok("style: xhs-ai-hook-sketch" in prompt_text, failures, "cover_style_missing")
+            assert_ok(f"style: {EXPECTED_IMAGE_STYLE}" in prompt_text, failures, "cover_style_missing")
             assert_ok("Cover hook rules:" in prompt_text, failures, "cover_hook_rules_missing")
+            assert_ok("central GitHub-style project card" in prompt_text, failures, "cover_project_visibility_missing")
             assert_ok("title: 别被AI演示骗了" in prompt_text, failures, "cover_title_missing")
 
         result = {

@@ -54,13 +54,24 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertTrue((workspace / "diagnostics" / "doctor.py").exists())
             config = workspace / ".baoyu-skills" / "baoyu-image-cards" / "EXTEND.md"
             self.assertTrue(config.exists())
-            self.assertIn("xhs-ai-hook-sketch", config.read_text(encoding="utf-8"))
+            self.assertIn("xhs-warm-cute-open-source", config.read_text(encoding="utf-8"))
 
     def test_generate_assets_records_chain_and_cover_prompt(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp) / "workspace"
             init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
             self.assertEqual(init.returncode, 0, init.stderr)
+            spec_path = workspace / "asset-generation" / "content_spec.json"
+            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec["project_facts"] = {
+                "name": "models.dev",
+                "repo": "github.com/vercel/ai",
+                "github_stars": "4.1k stars",
+                "license": "MIT",
+                "open_source": "true",
+            }
+            spec["source_urls"] = ["https://github.com/vercel/ai"]
+            spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
             self.assertEqual(generated.returncode, 0, generated.stderr)
 
@@ -85,8 +96,11 @@ class SkillStabilityTests(unittest.TestCase):
                 / "starter-ai-tool-evaluation"
                 / "01-cover.md"
             ).read_text(encoding="utf-8")
-            self.assertIn("style: xhs-ai-hook-sketch", prompt)
+            self.assertIn("style: xhs-warm-cute-open-source", prompt)
             self.assertIn("Cover hook rules:", prompt)
+            self.assertIn("Project name: models.dev", prompt)
+            self.assertIn("GitHub stars: 4.1k stars", prompt)
+            self.assertIn("central GitHub-style project card", prompt)
 
     def test_doctor_reports_missing_images_without_failing_command(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

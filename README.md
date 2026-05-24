@@ -11,7 +11,7 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, or browser
 - A Codex skill entrypoint: `SKILL.md`.
 - A complete workspace template under `assets/workspace-template`.
 - A wrapper for initializing, validating, packaging, and sending.
-- A model-first image step: final image cards should come from `baoyu-image-cards`/Codex `imagegen`, using the bundled `xhs-ai-hook-sketch` style for stronger Xiaohongshu cover hooks.
+- A model-first image step: final image cards should come from `baoyu-image-cards`/Codex `imagegen`, using the bundled `xhs-warm-cute-open-source` style for warm cute Xiaohongshu covers that still expose GitHub/open-source facts clearly.
 - Feishu health checks that can run after Windows logon.
 - Safety checks that prevent accidental Xiaohongshu automation or secret leakage.
 
@@ -89,8 +89,9 @@ python .\asset-generation\generate_current_assets.py
 
 # Then generate the 6 PNG cards with baoyu-image-cards / Codex imagegen and
 # save them to the image_path values in asset-generation\outputs\current-publish-assets.json.
-# The bundled .baoyu-skills config prefers xhs-ai-hook-sketch: no watermark,
-# warm hand-drawn AI cards, and a stronger first-card hook.
+# The bundled .baoyu-skills config prefers xhs-warm-cute-open-source: no
+# watermark, warm hand-drawn macaron cards, and visible GitHub/open-source facts
+# on the cover when a post is about a repo or starred project.
 # If you use another image model, keep the same output paths.
 
 # Finally package and validate:

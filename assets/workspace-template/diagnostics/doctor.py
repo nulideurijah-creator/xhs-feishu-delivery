@@ -64,6 +64,9 @@ EXPECTED_SKILL_MARKERS = [
     "imagegen",
 ]
 
+EXPECTED_IMAGE_STYLE = "xhs-warm-cute-open-source"
+EXPECTED_IMAGE_BACKEND = "preferred_image_backend: codex-imagegen"
+
 DANGEROUS_FILE_NAMES = {
     "cookies.json",
     "render_current_cards.py",
@@ -122,8 +125,8 @@ def check_baoyu_config(blockers: list[str]) -> dict[str, Any]:
     text = path.read_text(encoding="utf-8", errors="ignore") if path.exists() else ""
     checks = {
         "exists": path.exists(),
-        "style": "xhs-ai-hook-sketch" in text,
-        "backend": "preferred_image_backend: codex-imagegen" in text,
+        "style": EXPECTED_IMAGE_STYLE in text,
+        "backend": EXPECTED_IMAGE_BACKEND in text,
         "watermark_disabled": "enabled: false" in text,
     }
     for key, ok in checks.items():

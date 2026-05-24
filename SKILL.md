@@ -33,7 +33,8 @@ Use this chain for a new post:
    - Do not invent a hot topic from general model knowledge when `aihot` is available.
 2. **Title candidates**: use `dbs-xhs-title` style rules for Xiaohongshu title formulas and candidates.
 3. **Body copy**: use `write-xiaohongshu` writing constraints, then apply `humanizer-zh` to remove generic AI-sounding phrasing.
-4. **Image-card structure and prompts**: use `baoyu-image-cards` with the bundled `xhs-ai-hook-sketch` preference.
+4. **Image-card structure and prompts**: use `baoyu-image-cards` with the bundled `xhs-warm-cute-open-source` preference.
+   - For GitHub stars, open-source projects, or repo-based topics, put the verified repo/project name, star count, license/open-source badge, and source cue on the first card. Do not hide these facts in later pages or invent unverified counts.
 5. **Final PNG generation**: use Codex `imagegen` or the user's equivalent real image model as the raster backend.
 6. **Packaging and Feishu delivery**: use this `xhs-feishu-delivery` workflow.
 
@@ -91,6 +92,7 @@ local image renderer, treat that instruction as obsolete.
 - The Python wrapper is allowed to require the 6 final PNG files to exist because image generation is handled by `baoyu-image-cards`/`imagegen`, not by the packaging scripts.
 - The wrapper must use the workspace lock `.xhs_delivery.lock`; do not run direct workflow and skill workflow concurrently in the same workspace.
 - Feishu card must contain only: topic, title, full body, image list, 6 image previews, and tags.
+- Cover cards for GitHub/open-source topics must expose the concrete project/source facts immediately while keeping the warm cute hand-drawn macaron style.
 
 ## References
 
