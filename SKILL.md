@@ -31,12 +31,25 @@ Use this chain for a new post:
    - If the user asks for an AI-circle topic, hot news, GitHub trend, major AI update, or gives no concrete topic, use `aihot` first to pull current AI news and choose one Xiaohongshu-suitable vertical topic.
    - If the chosen angle depends on GitHub stars, repo activity, or developer-platform facts, use `agent-reach` as an additional verification/research skill after `aihot`.
    - Do not invent a hot topic from general model knowledge when `aihot` is available.
-2. **Title candidates**: use `dbs-xhs-title` style rules for Xiaohongshu title formulas and candidates.
-3. **Body copy**: use `write-xiaohongshu` writing constraints, then apply `humanizer-zh` to remove generic AI-sounding phrasing.
-4. **Image-card structure and prompts**: use `baoyu-image-cards` with the bundled `xhs-warm-cute-open-source` preference.
+2. **Fact verification**:
+   - Use `agent-reach` for official sources, GitHub facts, repo activity, X posts, papers, or source URLs that materially affect the claim.
+   - Do not rely on an `aihot` summary alone for concrete factual claims.
+3. **Content type and insight pack**:
+   - Use `content-strategy` to classify the post as one of:
+     `github_project_recommendation`, `ai_product_release`, `ai_industry_shift`, or `ai_technical_breakthrough`.
+   - Use `hv-analysis` in lightweight mode to produce an `insight_pack` before writing the body. Do not generate a PDF or long research report.
+   - The insight pack is the content brain. It must contain the hook, event, importance, takeaways, use cases, actionable framework, source facts, boundaries, and reader payoff.
+4. **Title candidates**: use `dbs-xhs-title` style rules for Xiaohongshu title formulas and candidates.
+5. **Body copy**:
+   - Read `references/editor_prompt.md` before writing `body_full`.
+   - Use `write-xiaohongshu` only as the final Xiaohongshu expression layer after the insight pack exists.
+   - Apply `humanizer-zh` to remove generic AI-sounding phrasing.
+   - Do not let `write-xiaohongshu` invent the depth layer or replace the insight pack.
+   - The final body should sound like a real AI-tools Xiaohongshu creator sharing a useful discovery, not a report, listicle, product manual, or training handout.
+6. **Image-card structure and prompts**: use `baoyu-image-cards` with the bundled `xhs-warm-cute-open-source` preference.
    - For GitHub stars, open-source projects, or repo-based topics, put the verified repo/project name, star count, license/open-source badge, and source cue on the first card. Do not hide these facts in later pages or invent unverified counts.
-5. **Final PNG generation**: use Codex `imagegen` or the user's equivalent real image model as the raster backend.
-6. **Packaging and Feishu delivery**: use this `xhs-feishu-delivery` workflow.
+7. **Final PNG generation**: use Codex `imagegen` or the user's equivalent real image model as the raster backend.
+8. **Packaging and Feishu delivery**: use this `xhs-feishu-delivery` workflow.
 
 If any required mature skill is unavailable in the current runtime, stop and
 state exactly which skill is missing. Do not silently replace it with shell
@@ -52,7 +65,7 @@ local image renderer, treat that instruction as obsolete.
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`
 2. The target workspace must contain the four workflow directories:
    `asset-generation`, `image-generation`, `publish-mainline`, and `feishu-delivery`.
-3. Prepare `asset-generation/content_spec.json` using the Required Mature Skill Chain above. It must contain the current topic, title, body, tags, image slug, source verification, and exactly 6 image page definitions.
+3. Prepare `asset-generation/content_spec.json` using the Required Mature Skill Chain above. It must contain the current topic, `content_type`, `insight_pack`, title, body, tags, image slug, source verification, and exactly 6 image page definitions.
 4. Run the asset generator first. It writes the copy package and the six prompt files:
    `python "<workspace>\\asset-generation\\generate_current_assets.py"`
 5. Generate the six image cards with the mature image-card path used by the owner:
@@ -81,6 +94,13 @@ local image renderer, treat that instruction as obsolete.
 ## Content Standards
 
 - Topic must stay in the AI/tools/dev productivity vertical unless the user explicitly changes the niche.
+- `content_type` must be one of `github_project_recommendation`, `ai_product_release`, `ai_industry_shift`, or `ai_technical_breakthrough`.
+- `insight_pack` must exist before the body is written and must include:
+  `core_hook`, `one_sentence_event`, `why_it_matters`, `key_takeaways`, `use_cases`, `actionable_framework`, `source_facts`, `boundaries`, and `reader_payoff`.
+- The body must deliver at least one concrete method, formula, checklist, use case, or judgment framework. It must not be only a news recap or generic reminder.
+- GitHub/open-source posts must default to a positive discovery/recommendation tone: explain what the project does well, where it is useful, who should save it, and why it is worth trying.
+- AI hot-news posts must turn the event into a reusable judgment: what happened, why it matters, who it affects, and how the reader should evaluate similar events.
+- The body must follow `references/editor_prompt.md`: no rigid "first/second/third" structure, no product-manual tone, no generic "worth watching" language, and no forced risk section for positive GitHub recommendations.
 - Title must be 20 Chinese characters or fewer.
 - Body must be 1000 characters or fewer.
 - Tags must be a non-empty list.

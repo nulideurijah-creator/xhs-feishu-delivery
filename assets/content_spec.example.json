@@ -2,7 +2,7 @@
   "_comment": "Example content spec. Copy the shape into a workspace content_spec.json and replace the topic, copy, tags, and 6 page definitions.",
   "review_id": "publish-example-001",
   "content_id": "example-xhs-001",
-  "title": "AI工具先看3点",
+  "title": "别被AI演示骗了",
   "summary": "A neutral example for explaining how to judge whether a new AI tool is worth trying.",
   "topic": "如何判断一个新 AI 工具值不值得试",
   "hot_source": "starter example",
@@ -15,7 +15,45 @@
     "note": "This file is only a schema example. Verify real claims before delivery."
   },
   "project_facts": {},
-  "body_full": "这里写最终小红书正文。保持口语、具体、有判断，不要写成模板套话。正文总长度必须控制在 1000 字以内。",
+  "content_type": "ai_product_release",
+  "insight_pack": {
+    "core_hook": "别让 AI 工具推荐停留在种草，要给读者一个能直接用的判断方法。",
+    "one_sentence_event": "这是一份用于演示 content_spec 结构的 AI 工具判断样例。",
+    "why_it_matters": "正文生成前先写洞察包，可以减少空话和模板腔。",
+    "key_takeaways": [
+      "正文要先有观点和判断框架。",
+      "工具类内容要说明具体使用场景。",
+      "事实和来源要在写正文前准备好。"
+    ],
+    "use_cases": [
+      "创建一篇 AI 工具小红书图文。",
+      "检查正文是否有可收藏的判断方法。"
+    ],
+    "actionable_framework": {
+      "name": "AI 工具内容 3 件事",
+      "items": [
+        "一句话讲清楚工具解决什么问题。",
+        "列出 2-3 个真实使用场景。",
+        "给读者一个判断是否值得用的方法。"
+      ]
+    },
+    "source_facts": [
+      {
+        "claim": "content_spec.json 是一篇小红书内容的单一事实源。",
+        "source_url": "https://example.com/source"
+      },
+      {
+        "claim": "正文总长度必须控制在 1000 字以内。",
+        "source_url": "https://example.com/source"
+      }
+    ],
+    "boundaries": [
+      "这是公开仓库里的结构样例，不包含真实热点结论。",
+      "真实发布前必须替换来源、正文和图片页面。"
+    ],
+    "reader_payoff": "读者可以照这个结构准备一篇有判断方法的小红书正文。"
+  },
+  "body_full": "我现在看新 AI 工具，第一反应已经不是“好厉害”了。\n\n我会先想：它能不能真的放进我的流程里。\n\n很多演示视频都很会挑场景。输入干净，问题明确，输出漂亮，看起来像马上能省掉半天时间。但自己一用就会发现，真正麻烦的地方经常不在生成，而在前后那一截：资料从哪来，结果怎么接着用，错了谁检查。\n\n所以我现在试 AI 工具，会先拿一个很小的真实任务跑一遍。\n\n比如整理一段资料、改一份草稿、处理一批重复信息。不是看它第一次答得多惊艳，而是看我能不能少返工，输出能不能直接接进下一步，出错的时候我能不能看出来。\n\n如果一个工具只能在演示里发光，到了真实工作里每一步都要我盯着，那它更像收藏夹里的新玩具。\n\n如果它能稳定吃掉一个小麻烦，哪怕功能不花哨，我反而会留下来。\n\n现在 AI 工具太多了，名字一个比一个像，发布页一个比一个会讲。我觉得最靠谱的试用方式还是很朴素：别先问它强不强，先问它能不能少占用你的脑子。",
   "tags": [
     "AI工具",
     "AI效率",
@@ -23,9 +61,9 @@
   ],
   "title_candidates": [
     {
-      "title": "AI工具先看3点",
+      "title": "别被AI演示骗了",
       "type": "收藏价值",
-      "reason": "给读者一个可执行的判断清单。"
+      "reason": "用真人试用视角提醒读者别被演示效果带偏。"
     }
   ],
   "image_slug": "example-ai-tool-evaluation",

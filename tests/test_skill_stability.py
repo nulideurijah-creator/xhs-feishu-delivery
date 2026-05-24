@@ -30,12 +30,28 @@ class SkillStabilityTests(unittest.TestCase):
             "Required Mature Skill Chain",
             "aihot",
             "agent-reach",
+            "content-strategy",
+            "hv-analysis",
+            "insight_pack",
             "dbs-xhs-title",
+            "references/editor_prompt.md",
             "write-xiaohongshu",
             "humanizer-zh",
             "baoyu-image-cards",
             "imagegen",
             "Do not invent a hot topic",
+        ]:
+            self.assertIn(marker, text)
+
+    def test_editor_prompt_enforces_natural_creator_voice(self) -> None:
+        text = (ROOT / "references" / "editor_prompt.md").read_text(encoding="utf-8")
+        for marker in [
+            "真人博主",
+            "不要把干货写成清单模板",
+            "工具说明书",
+            "如果读起来像 AI 在解释，请重写",
+            "它做的事很直接",
+            "这个数据仅是一个参考",
         ]:
             self.assertIn(marker, text)
 
@@ -81,8 +97,12 @@ class SkillStabilityTests(unittest.TestCase):
             source_text = json.dumps(package["skill_sources"], ensure_ascii=False)
             for marker in [
                 "aihot",
-                "dbs-xhs-title",
-                "write-xiaohongshu",
+                "agent-reach",
+                "content-strategy",
+                "hv-analysis-light",
+            "dbs-xhs-title",
+            "editor_prompt",
+            "write-xiaohongshu",
                 "humanizer-zh",
                 "baoyu-image-cards",
                 "imagegen",
@@ -101,6 +121,58 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertIn("Project name: models.dev", prompt)
             self.assertIn("GitHub stars: 4.1k stars", prompt)
             self.assertIn("central GitHub-style project card", prompt)
+
+            copy = (
+                workspace / "asset-generation" / "outputs" / "current-copy.md"
+            ).read_text(encoding="utf-8")
+            self.assertIn("洞察包摘要", copy)
+            self.assertIn("内容类型：ai_product_release", copy)
+            self.assertEqual(package["content_type"], "ai_product_release")
+            self.assertIn("insight_pack", package)
+
+    def test_generate_assets_rejects_missing_insight_pack(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp) / "workspace"
+            init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
+            self.assertEqual(init.returncode, 0, init.stderr)
+            spec_path = workspace / "asset-generation" / "content_spec.json"
+            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec.pop("insight_pack", None)
+            spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+            generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
+            self.assertNotEqual(generated.returncode, 0)
+            self.assertIn("content_spec missing", generated.stderr + generated.stdout)
+
+    def test_generate_assets_rejects_weak_source_facts(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp) / "workspace"
+            init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
+            self.assertEqual(init.returncode, 0, init.stderr)
+            spec_path = workspace / "asset-generation" / "content_spec.json"
+            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec["insight_pack"]["source_facts"] = [
+                {"claim": "只有一条来源事实。", "source_url": "https://example.com/source"}
+            ]
+            spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+            generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
+            self.assertNotEqual(generated.returncode, 0)
+            self.assertIn("source_facts", generated.stderr + generated.stdout)
+
+    def test_generate_assets_rejects_template_voice(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp) / "workspace"
+            init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
+            self.assertEqual(init.returncode, 0, init.stderr)
+            spec_path = workspace / "asset-generation" / "content_spec.json"
+            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec["body_full"] = "它最适合三类人。这个工具值得关注。总结一下，AI 工具要看长期价值。"
+            spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+            generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
+            self.assertNotEqual(generated.returncode, 0)
+            self.assertIn("body contains forbidden phrases", generated.stderr + generated.stdout)
 
     def test_doctor_reports_missing_images_without_failing_command(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

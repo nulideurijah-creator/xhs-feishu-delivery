@@ -17,7 +17,8 @@ This guide explains every tracked file in the repository so a new user can under
 | File | Purpose |
 |---|---|
 | `agents/openai.yaml` | Display metadata used by Codex UI: name, short description, and default prompt. |
-| `references/content_spec.md` | Field-by-field reference for `content_spec.json`, the single source of truth for a post. |
+| `references/content_spec.md` | Field-by-field reference for `content_spec.json`, including `content_type`, `insight_pack`, body-quality rules, and mature skill-chain expectations. |
+| `references/editor_prompt.md` | Owner-approved Xiaohongshu body prompt. It keeps copy natural, non-template, and closer to a real AI-tools creator's voice. |
 | `references/image_generation.md` | Contract for generating the 6 final PNG cards with `baoyu-image-cards`, Codex `imagegen`, or the user's equivalent image model. |
 
 ## Skill Scripts
@@ -33,7 +34,7 @@ This guide explains every tracked file in the repository so a new user can under
 
 | File | Purpose |
 |---|---|
-| `assets/content_spec.example.json` | Small standalone example of the post schema. Useful for understanding required fields. |
+| `assets/content_spec.example.json` | Small standalone example of the post schema. Useful for understanding required fields, especially the required insight pack for stronger copy. |
 
 ## Workspace Template
 
@@ -45,7 +46,7 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | `assets/workspace-template/.baoyu-skills/baoyu-image-cards/EXTEND.md` | Bundled `baoyu-image-cards` preference file. It disables watermarks, pins Codex image generation, and defines the `xhs-warm-cute-open-source` style for warm cute cards with visible GitHub/open-source facts on repo-based covers. |
 | `assets/workspace-template/requirements.txt` | Python dependency list for the generated workspace. It is intentionally empty by default because final cards are model-generated, not drawn locally. |
 | `assets/workspace-template/run_xhs_delivery.py` | Workspace-local packaging and Feishu runner. It mirrors the skill wrapper but does not require `--workspace`. |
-| `assets/workspace-template/asset-generation/content_spec.json` | Editable post specification. Users change this file to create a new post. |
+| `assets/workspace-template/asset-generation/content_spec.json` | Editable post specification. Users change this file to create a new post, including the content type, insight pack, source facts, body, tags, and 6 card prompts. |
 | `assets/workspace-template/asset-generation/generate_current_assets.py` | Validates the spec, writes copy/title/prompt outputs, and prepares image paths for model-generated cards. |
 | `assets/workspace-template/diagnostics/doctor.py` | Read-only workspace doctor. It writes diagnostics reports without sending Feishu messages or generating images. |
 | `assets/workspace-template/image-generation/.gitkeep` | Keeps the model-image directory in the template. Prompt files and PNG outputs are generated here at runtime. |

@@ -6,9 +6,12 @@ Use this reference when editing the JSON file by hand. JSON does not support rea
 
 Before editing this file for a real post, follow the mature skill chain in
 `SKILL.md`: use `aihot` for AI-topic discovery unless the user already supplied
-a concrete topic/source, use `dbs-xhs-title` for title candidates, use
-`write-xiaohongshu` plus `humanizer-zh` for the body, and use
-`baoyu-image-cards` plus `imagegen` for the final images.
+a concrete topic/source, use `agent-reach` to verify material facts, use
+`content-strategy` to choose the content type, use `hv-analysis` in lightweight
+mode to create the insight pack, use `dbs-xhs-title` for title candidates, use
+read `references/editor_prompt.md`, use `write-xiaohongshu` plus
+`humanizer-zh` only for final expression, and use `baoyu-image-cards` plus
+`imagegen` for the final images.
 
 For a new workspace, initialize the bundled template first:
 
@@ -25,6 +28,8 @@ Required fields:
 - `source_urls`: list of source URLs.
 - `source_verification`: source notes and factual caveats.
 - `project_facts`: optional object for GitHub/open-source topics. Use verified values only; supported keys include `name`, `repo`, `github_stars`, `license`, `open_source`, `url`, and `description`.
+- `content_type`: one of `github_project_recommendation`, `ai_product_release`, `ai_industry_shift`, or `ai_technical_breakthrough`.
+- `insight_pack`: required structured insight pack created before writing the body. It is the content brain, not Feishu output.
 - `body_full`: final Xiaohongshu body, 1000 characters or fewer.
 - `tags`: non-empty tag list, without leading `#`.
 - `title_candidates`: optional title alternatives.
@@ -38,6 +43,30 @@ Each `pages` item must include:
 - `subtitle`: short card subtitle.
 - `visual`: visual direction for the image prompt.
 - `layout`: optional per-card baoyu layout override such as `flow`, `comparison`, `list`, or `balanced`.
+
+`insight_pack` must include:
+
+- `core_hook`: the high-click Xiaohongshu angle.
+- `one_sentence_event`: what happened, in one sentence.
+- `why_it_matters`: why the reader should care.
+- `key_takeaways`: non-empty list of concrete insights.
+- `use_cases`: non-empty list of practical use cases or affected scenarios.
+- `actionable_framework`: object with `name` and non-empty `items` list. This is the save-worthy method, formula, checklist, or judgment framework.
+- `source_facts`: list of at least two source-backed factual claims, each with `claim` and `source_url`.
+- `boundaries`: non-empty list of caveats or scope limits.
+- `reader_payoff`: what the reader can do or understand after reading.
+
+Use `references/editor_prompt.md` before writing `body_full`. The `content_type`
+should guide the angle, but it must not force a rigid numbered template. The
+body should feel like a real Xiaohongshu AI-tools creator sharing a useful
+discovery with a point of view.
+
+Choose the body angle from `content_type`:
+
+- `github_project_recommendation`: discovery, one-sentence value, strengths, use cases, who should save it, why it is worth trying. Default to a positive recommendation tone and do not force risks or drawbacks.
+- `ai_product_release`: what changed, what pain it solves, what is useful, who should try it, how to judge whether it is worth using.
+- `ai_industry_shift`: what happened, what change it signals, how it affects users/developers, and one judgment framework.
+- `ai_technical_breakthrough`: one-sentence explanation, what limitation changed, why it matters, possible applications, and current boundaries.
 
 For GitHub stars, open-source projects, or repo-based topics, fill
 `project_facts` before generating prompts. The cover prompt will then ask the

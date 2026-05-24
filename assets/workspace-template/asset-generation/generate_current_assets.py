@@ -25,6 +25,25 @@ IMAGE_STYLE = "xhs-warm-cute-open-source"
 IMAGE_LAYOUT = "balanced"
 IMAGE_PALETTE = "macaron"
 
+ALLOWED_CONTENT_TYPES = {
+    "github_project_recommendation",
+    "ai_product_release",
+    "ai_industry_shift",
+    "ai_technical_breakthrough",
+}
+
+INSIGHT_REQUIRED = [
+    "core_hook",
+    "one_sentence_event",
+    "why_it_matters",
+    "key_takeaways",
+    "use_cases",
+    "actionable_framework",
+    "source_facts",
+    "boundaries",
+    "reader_payoff",
+]
+
 FORBIDDEN_PHRASES = [
     # Phrases that tend to make Chinese social copy sound generic or AI-written.
     # Keep this list short and concrete; users can adapt it in their workspace.
@@ -36,6 +55,16 @@ FORBIDDEN_PHRASES = [
     "而且",
     "此外",
     "综上",
+    "首先，",
+    "其次，",
+    "最后，",
+    "总结一下",
+    "值得关注",
+    "很有潜力",
+    "它的好处是",
+    "它最适合三类人",
+    "我现在判断一个 AI 工具，会先问 3 个问题",
+    "所以现在我看一个 AI 工具，不先问",
 ]
 
 
@@ -62,10 +91,25 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 def validate_spec(spec: dict[str, Any]) -> None:
     """Validate business rules before any image or Feishu work begins."""
-    required = ["review_id", "content_id", "title", "body_full", "tags", "pages"]
+    required = [
+        "review_id",
+        "content_id",
+        "title",
+        "topic",
+        "content_type",
+        "insight_pack",
+        "body_full",
+        "tags",
+        "image_slug",
+        "pages",
+    ]
     missing = [key for key in required if not spec.get(key)]
     if missing:
         raise ValueError(f"content_spec missing: {missing}")
+    content_type = str(spec["content_type"])
+    if content_type not in ALLOWED_CONTENT_TYPES:
+        raise ValueError(f"invalid content_type: {content_type}")
+    validate_insight_pack(spec["insight_pack"])
     if len(str(spec["title"])) > 20:
         raise ValueError(f"title too long: {len(str(spec['title']))}/20")
     body = str(spec["body_full"])
@@ -82,9 +126,68 @@ def validate_spec(spec: dict[str, Any]) -> None:
         raise ValueError(f"body contains forbidden phrases: {hits}")
 
 
+def validate_insight_pack(pack: Any) -> None:
+    """Make sure the body has a real insight source before packaging."""
+    if not isinstance(pack, dict):
+        raise ValueError("insight_pack must be an object")
+    missing = [key for key in INSIGHT_REQUIRED if not pack.get(key)]
+    if missing:
+        raise ValueError(f"insight_pack missing: {missing}")
+
+    for key in ["core_hook", "one_sentence_event", "why_it_matters", "reader_payoff"]:
+        if not str(pack.get(key, "")).strip():
+            raise ValueError(f"insight_pack.{key} must be non-empty")
+
+    for key in ["key_takeaways", "use_cases", "boundaries"]:
+        value = pack.get(key)
+        if not isinstance(value, list) or not any(str(item).strip() for item in value):
+            raise ValueError(f"insight_pack.{key} must be a non-empty list")
+
+    framework = pack.get("actionable_framework")
+    if not isinstance(framework, dict):
+        raise ValueError("insight_pack.actionable_framework must be an object")
+    if not str(framework.get("name", "")).strip():
+        raise ValueError("insight_pack.actionable_framework.name must be non-empty")
+    items = framework.get("items")
+    if not isinstance(items, list) or not any(str(item).strip() for item in items):
+        raise ValueError("insight_pack.actionable_framework.items must be a non-empty list")
+
+    source_facts = pack.get("source_facts")
+    if not isinstance(source_facts, list) or len(source_facts) < 2:
+        raise ValueError("insight_pack.source_facts must contain at least two source-backed facts")
+    for index, item in enumerate(source_facts, start=1):
+        if not isinstance(item, dict) or not str(item.get("claim", "")).strip() or not str(item.get("source_url", "")).strip():
+            raise ValueError(f"insight_pack.source_facts[{index}] must include claim and source_url")
+
+
+def render_insight_summary(spec: dict[str, Any]) -> str:
+    pack = spec["insight_pack"]
+    framework = pack.get("actionable_framework", {})
+    source_facts = pack.get("source_facts", [])
+    fact_lines = []
+    for item in source_facts[:3]:
+        if isinstance(item, dict):
+            fact_lines.append(f"- {item.get('claim', '')} ({item.get('source_url', '')})")
+    return "\n".join(
+        [
+            f"内容类型：{spec['content_type']}",
+            f"核心钩子：{pack.get('core_hook', '')}",
+            f"一句话事件：{pack.get('one_sentence_event', '')}",
+            f"读者收获：{pack.get('reader_payoff', '')}",
+            f"可收藏方法：{framework.get('name', '')}",
+            *[f"- {item}" for item in framework.get("items", [])[:5]],
+            "事实来源：",
+            *fact_lines,
+        ]
+    )
+
+
 def render_copy(spec: dict[str, Any]) -> str:
     tag_text = " ".join(f"#{str(tag).strip().lstrip('#')}" for tag in spec["tags"])
     return f"""标题：{spec['title']}
+洞察包摘要：
+{render_insight_summary(spec)}
+
 正文：
 {spec['body_full']}
 标签：{tag_text}
@@ -259,9 +362,11 @@ def build_package(spec: dict[str, Any]) -> dict[str, Any]:
         "title": spec["title"],
         "summary": spec.get("summary", ""),
         "topic": spec["topic"],
+        "content_type": spec["content_type"],
         "hot_source": spec.get("hot_source", ""),
         "source_urls": spec.get("source_urls", []),
         "source_verification": spec.get("source_verification", {}),
+        "insight_pack": spec["insight_pack"],
         "body_full": spec["body_full"],
         "body_char_count": len(spec["body_full"]),
         "tags": [str(tag).strip().lstrip("#") for tag in spec["tags"]],
@@ -284,9 +389,12 @@ def build_package(spec: dict[str, Any]) -> dict[str, Any]:
             "image_prompt_package": str(PROMPT_PACKAGE_PATH.relative_to(ROOT)),
         },
         "skill_sources": {
-            "topic": "aihot; agent-reach when GitHub/repo verification is needed",
+            "topic": "aihot",
+            "verification": "agent-reach for official sources, GitHub facts, X posts, papers, and source URLs",
+            "content_type": "content-strategy",
+            "insight_pack": "hv-analysis-light",
             "title": "dbs-xhs-title style rules",
-            "copy": "write-xiaohongshu + humanizer-zh editing rules",
+            "copy": "references/editor_prompt.md + write-xiaohongshu expression layer + humanizer-zh editing rules",
             "image_prompts": "baoyu-image-cards + Codex imagegen",
             "image_style": IMAGE_STYLE,
         },

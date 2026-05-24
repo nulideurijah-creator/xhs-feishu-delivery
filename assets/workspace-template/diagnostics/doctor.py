@@ -42,11 +42,20 @@ CONTENT_REQUIRED = [
     "content_id",
     "title",
     "topic",
+    "content_type",
+    "insight_pack",
     "body_full",
     "tags",
     "image_slug",
     "pages",
 ]
+
+ALLOWED_CONTENT_TYPES = {
+    "github_project_recommendation",
+    "ai_product_release",
+    "ai_industry_shift",
+    "ai_technical_breakthrough",
+}
 
 FEISHU_REQUIRED = [
     "FEISHU_APP_ID",
@@ -57,7 +66,11 @@ FEISHU_REQUIRED = [
 
 EXPECTED_SKILL_MARKERS = [
     "aihot",
+    "agent-reach",
+    "content-strategy",
+    "hv-analysis-light",
     "dbs-xhs-title",
+    "editor_prompt",
     "write-xiaohongshu",
     "humanizer-zh",
     "baoyu-image-cards",
@@ -146,19 +159,61 @@ def check_content_spec(blockers: list[str]) -> dict[str, Any]:
     body = str(spec.get("body_full", ""))
     tags = spec.get("tags", [])
     pages = spec.get("pages", [])
+    content_type = str(spec.get("content_type", ""))
+    insight_pack = spec.get("insight_pack", {})
     add(len(title) > 20, blockers, f"title_too_long:{len(title)}/20")
     add(len(body) > 1000, blockers, f"body_too_long:{len(body)}/1000")
+    add(content_type not in ALLOWED_CONTENT_TYPES, blockers, f"invalid_content_type:{content_type}")
     add(not isinstance(tags, list) or not tags, blockers, "tags_missing")
     add(not isinstance(pages, list) or len(pages) != 6, blockers, "pages_not_6")
+    check_insight_pack(insight_pack, blockers)
     return {
         "exists": True,
         "title": title,
         "title_length": len(title),
+        "content_type": content_type,
         "body_length": len(body),
         "tag_count": len(tags) if isinstance(tags, list) else 0,
         "page_count": len(pages) if isinstance(pages, list) else 0,
         "image_slug": spec.get("image_slug", ""),
     }
+
+
+def check_insight_pack(pack: Any, blockers: list[str]) -> None:
+    if not isinstance(pack, dict):
+        blockers.append("insight_pack_invalid")
+        return
+    for key in [
+        "core_hook",
+        "one_sentence_event",
+        "why_it_matters",
+        "key_takeaways",
+        "use_cases",
+        "actionable_framework",
+        "source_facts",
+        "boundaries",
+        "reader_payoff",
+    ]:
+        add(not pack.get(key), blockers, f"insight_pack_missing:{key}")
+
+    framework = pack.get("actionable_framework", {})
+    if not isinstance(framework, dict):
+        blockers.append("insight_pack_actionable_framework_invalid")
+    else:
+        add(not str(framework.get("name", "")).strip(), blockers, "insight_pack_framework_name_missing")
+        items = framework.get("items", [])
+        add(not isinstance(items, list) or not items, blockers, "insight_pack_framework_items_missing")
+
+    source_facts = pack.get("source_facts", [])
+    add(not isinstance(source_facts, list) or len(source_facts) < 2, blockers, "insight_pack_source_facts_lt_2")
+    if isinstance(source_facts, list):
+        for index, item in enumerate(source_facts, start=1):
+            invalid = (
+                not isinstance(item, dict)
+                or not str(item.get("claim", "")).strip()
+                or not str(item.get("source_url", "")).strip()
+            )
+            add(invalid, blockers, f"insight_pack_source_fact_invalid:{index}")
 
 
 def check_asset_package(blockers: list[str]) -> dict[str, Any]:

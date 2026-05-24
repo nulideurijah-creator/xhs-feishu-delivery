@@ -31,22 +31,28 @@ The GitHub repo gives other users the same workflow and image-prompt style. It d
 
 ```mermaid
 flowchart LR
-  A["aihot selects AI topic"] --> B["dbs-xhs-title creates title candidates"]
-  B --> C["write-xiaohongshu + humanizer-zh create body"]
-  C --> D["content_spec.json"]
-  D --> E["baoyu-image-cards creates image prompts"]
-  E --> F["imagegen creates 6 PNG cards"]
-  F --> G["Build manual package"]
-  G --> H["Send complete Feishu card"]
-  H --> I["User posts manually on Xiaohongshu"]
+  A["aihot selects AI topic"] --> B["agent-reach verifies facts"]
+  B --> C["content-strategy chooses content type"]
+  C --> D["hv-analysis-light creates insight pack"]
+  D --> E["dbs-xhs-title creates title candidates"]
+  E --> F["editor_prompt + write-xiaohongshu + humanizer-zh create body"]
+  F --> G["content_spec.json"]
+  G --> H["baoyu-image-cards creates image prompts"]
+  H --> I["imagegen creates 6 PNG cards"]
+  I --> J["Build manual package"]
+  J --> K["Send complete Feishu card"]
+  K --> L["User posts manually on Xiaohongshu"]
 ```
 
 ## Mature Skills Used
 
 - `aihot`: default source for AI-circle hot topics and news selection.
-- `agent-reach`: optional verification for GitHub stars, repo activity, or developer-platform facts.
+- `agent-reach`: verification for source URLs, GitHub stars, repo activity, official announcements, X posts, and developer-platform facts.
+- `content-strategy`: classifies the post as project recommendation, product release, industry shift, or technical breakthrough.
+- `hv-analysis`: used only in lightweight mode to create the insight pack before body writing.
 - `dbs-xhs-title`: Xiaohongshu title formulas and candidates.
-- `write-xiaohongshu`: Xiaohongshu body-writing constraints.
+- `references/editor_prompt.md`: owner's Xiaohongshu creator voice prompt for natural, non-template body copy.
+- `write-xiaohongshu`: final Xiaohongshu expression layer after the insight pack exists.
 - `humanizer-zh`: removes generic AI-sounding phrasing.
 - `baoyu-image-cards`: structures the 6-card Xiaohongshu image series.
 - `imagegen`: generates the final raster PNG cards.
@@ -66,6 +72,8 @@ The image-generation handoff is documented in [references/image_generation.md](r
 - Supporting skills available in the Codex runtime:
   - `aihot`
   - `agent-reach`
+  - `content-strategy`
+  - `hv-analysis`
   - `dbs-xhs-title`
   - `write-xiaohongshu`
   - `humanizer-zh`
@@ -121,7 +129,7 @@ python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_deliv
 Create the post assets:
 
 ```powershell
-# 5. Edit this file for your topic, body, tags, and six image cards.
+# 5. Edit this file for your topic, content_type, insight_pack, body, tags, and six image cards.
 notepad .\asset-generation\content_spec.json
 
 # 6. Generate copy output and image prompt files.
@@ -204,6 +212,19 @@ For GitHub stars, open-source projects, or repo-based topics, add verified facts
 ```
 
 The bundled `xhs-warm-cute-open-source` style asks the cover prompt to show those facts as a visible GitHub-style project card: project name, star count, and open-source/license badge should be visible on the first image. Do not invent missing star counts, repo names, licenses, or logos.
+
+## Body Quality Standard
+
+Every post must include a structured `insight_pack` before `body_full` is written. The body should feel like a Xiaohongshu creator sharing a useful discovery, not a report, product manual, or training handout. Use [references/editor_prompt.md](references/editor_prompt.md) before writing the body.
+
+Allowed content types:
+
+- `github_project_recommendation`: positive discovery/recommendation tone for GitHub and open-source projects.
+- `ai_product_release`: new AI model, product, or feature release.
+- `ai_industry_shift`: funding, hiring, cost, regulation, platform, or market-change story.
+- `ai_technical_breakthrough`: paper, architecture, benchmark, model capability, or technical method.
+
+The final body must include at least one useful judgment, use case, or reader takeaway, but it should not force a rigid numbered checklist unless the topic naturally needs one. Avoid generic recap phrases such as "值得关注", "很有潜力", "它做的事很直接", "这个数据仅是一个参考", or empty reminders that do not tell the reader what to do next.
 
 ## Command Reference: Run
 
