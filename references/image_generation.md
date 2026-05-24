@@ -19,6 +19,9 @@ template renderer for final images.
    - preferred raster backend in Codex: `imagegen`
    - fallback: the user's own equivalent image model, if Codex imagegen is not available
 
+   If no real image model/backend is available, stop here and report the block.
+   Do not write code that draws substitute cards locally.
+
 4. Save every final PNG exactly to the `image_path` values listed in:
 
    `asset-generation/outputs/current-publish-assets.json`
@@ -30,6 +33,7 @@ template renderer for final images.
 ## Rules
 
 - Do not generate final cards with PIL, SVG, HTML, canvas, or a template drawing script.
+- Do not create, restore, edit, or run `render_current_cards.py`.
 - Do not use placeholder diagrams as final cards.
 - Do not reuse old test images unless the user explicitly asks for a fixture-style dry run.
 - If the image model saves files somewhere else first, move the selected final PNGs into the required workspace paths before packaging.
