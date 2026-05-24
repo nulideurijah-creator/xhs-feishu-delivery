@@ -1,115 +1,44 @@
 # xhs-feishu-delivery
 
-A Codex skill for preparing Xiaohongshu image-text post packages and sending complete delivery cards to Feishu for manual publishing.
+Codex skill for generating a Xiaohongshu image-text package and sending the complete package to Feishu for manual posting.
 
-This workflow is intentionally manual-publish only. It does not automate Xiaohongshu login, upload, editor control, or publishing.
+It does **not** automate Xiaohongshu publishing, login, cookies, MCP, or browser control.
 
-## What It Does
+## Workflow
 
-- Validates a Xiaohongshu content spec.
-- Renders 6 deterministic PNG image cards from the content spec.
-- Builds a local post package from an existing workspace.
-- Validates title, body, tags, and exactly 6 image cards.
-- Builds a buttonless Feishu delivery card.
-- Sends the full title, body, tags, image list, and 6 image previews to Feishu.
-- Can install a Windows logon health check for Feishu credentials.
-- Uses a workspace lock to prevent concurrent runs from corrupting in-progress image/package outputs.
+```mermaid
+flowchart LR
+  A["content_spec.json"] --> B["Generate copy + prompts"]
+  B --> C["Render 6 PNG cards"]
+  C --> D["Build manual package"]
+  D --> E["Build Feishu card"]
+  E --> F["Send to Feishu"]
+  F --> G["User posts manually on Xiaohongshu"]
+```
 
-## What It Does Not Do
-
-- No Xiaohongshu MCP.
-- No browser automation for Xiaohongshu.
-- No cookies or login state.
-- No auto-publishing.
-- No Feishu approval buttons, callbacks, WebSocket receivers, or tunnels.
-- No Obsidian, analytics, competitor scraping, or self-improvement loop.
-
-## Install
-
-Copy this repository into your Codex skills directory:
+## Install Skill
 
 ```powershell
-Copy-Item -Recurse -Force . "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery"
+git clone https://github.com/nulideurijah-creator/xhs-feishu-delivery.git
+Copy-Item -Recurse -Force .\xhs-feishu-delivery "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery"
 ```
 
-Restart Codex or open a new session, then call:
+Restart Codex after installing.
 
-```text
-$xhs-feishu-delivery prepare and validate my Xiaohongshu Feishu delivery package
-```
-
-## Workspace Layout
-
-The skill expects a workspace with these directories:
-
-```text
-workspace/
-├── asset-generation/
-│   ├── content_spec.json
-│   └── generate_current_assets.py
-├── image-generation/
-│   ├── render_current_cards.py
-│   └── outputs/images/<image_slug>/<page_id>.png
-├── publish-mainline/
-│   ├── build_manual_publish_package.py
-│   └── preflight.py
-└── feishu-delivery/
-    ├── check_feishu_ready.py
-    ├── install_startup_check.py
-    ├── build_delivery_card.py
-    ├── send_delivery_card.py
-    └── .env
-```
-
-Use `assets/content_spec.example.json` as a starter for `asset-generation/content_spec.json`.
-
-## Run
-
-Validate locally:
+## Create Workspace
 
 ```powershell
-python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --local-only
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --init-workspace
+cd "D:\path\to\xhs-workspace"
+python -m pip install -r requirements.txt
 ```
 
-Validate Feishu credentials without sending:
+Configure Feishu credentials:
 
 ```powershell
-python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --check-feishu
+Copy-Item .\feishu-delivery\.env.example .\feishu-delivery\.env
+notepad .\feishu-delivery\.env
 ```
-
-Install automatic Feishu health check after Windows logon:
-
-```powershell
-python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --install-startup-check
-```
-
-Install a machine-startup health check before any user logs in. This requires administrator privileges in the target workspace installer:
-
-```powershell
-python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --install-system-startup-check
-```
-
-Build the package and validate Feishu credentials without sending:
-
-```powershell
-python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --dry-run
-```
-
-Send the Feishu delivery card:
-
-```powershell
-python scripts/run_xhs_delivery.py --workspace "D:\path\to\workspace" --send
-```
-
-## Feishu Env
-
-Keep Feishu credentials only in the workspace:
-
-```text
-workspace/feishu-delivery/.env
-```
-
-Do not commit `.env`.
 
 Required variables:
 
@@ -120,14 +49,55 @@ FEISHU_RECEIVE_ID_TYPE=open_id
 FEISHU_RECEIVE_ID=
 ```
 
-## Validate This Skill
+## Run
+
+Validate without Feishu:
 
 ```powershell
-python scripts/validate_skill_safety.py --skill-dir .
-python -m py_compile scripts/run_xhs_delivery.py scripts/validate_skill_safety.py
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --local-only
 ```
 
-Feishu delivery does not use a persistent connection. Reboots do not break a daemon because there is no daemon; each send fetches a fresh tenant token. For long-term desktop use, install the logon health check once. If Windows blocks Task Scheduler or the Startup folder, the workspace installer may fall back to the current user's `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` startup entry. For pre-login machine startup, install the SYSTEM scheduled task from an administrator shell.
+Check Feishu credentials:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --check-feishu
+```
+
+Send the complete package to Feishu:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --send
+```
+
+## Startup Check
+
+After Windows logon:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --install-startup-check
+```
+
+Before any user logs in, run from an administrator shell:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --install-system-startup-check
+```
+
+## Safety
+
+- Manual Xiaohongshu posting only.
+- No Xiaohongshu MCP.
+- No Xiaohongshu cookies.
+- No browser publishing automation.
+- No Feishu buttons, callbacks, WebSocket receiver, or tunnel.
+- Workspace runs are protected by `.xhs_delivery.lock`.
+
+## Validate Skill
+
+```powershell
+python scripts\validate_skill_safety.py --skill-dir .
+python -m py_compile scripts\run_xhs_delivery.py scripts\init_workspace.py scripts\validate_skill_safety.py
+```
 
 ## License
 

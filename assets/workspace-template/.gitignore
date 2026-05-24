@@ -1,0 +1,5 @@
+.env
+feishu-delivery/.env
+**/outputs/
+**/__pycache__/
+.xhs_delivery.lock

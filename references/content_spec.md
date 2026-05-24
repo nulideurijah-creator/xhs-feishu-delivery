@@ -2,6 +2,10 @@
 
 The workspace file `asset-generation/content_spec.json` is the single source of truth for one Xiaohongshu post.
 
+For a new workspace, initialize the bundled template first:
+
+`python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`
+
 Required fields:
 
 - `review_id`: stable delivery run id.

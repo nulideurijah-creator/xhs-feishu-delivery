@@ -94,6 +94,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to a workspace containing asset-generation, publish-mainline, and feishu-delivery.",
     )
     mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--init-workspace", action="store_true", help="Create the workspace from this skill's bundled template")
     mode.add_argument("--check-feishu", action="store_true", help="Check Feishu credentials without building or sending")
     mode.add_argument("--install-startup-check", action="store_true", help="Install a Windows logon Feishu health check")
     mode.add_argument("--install-system-startup-check", action="store_true", help="Install a Windows startup health check; requires administrator")
@@ -106,6 +107,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str]) -> int:
     args = build_parser().parse_args(argv)
+    if args.init_workspace:
+        run_step(Path(__file__).resolve().parents[1], "init_workspace", [sys.executable, ".\\scripts\\init_workspace.py", "--workspace", args.workspace])
+        return 0
+
     workspace = resolve_workspace(args.workspace)
     if args.check_feishu:
         require_files(workspace, CHECK_REQUIRED_FILES)
