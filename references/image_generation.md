@@ -19,6 +19,10 @@ template renderer for final images.
    - preferred raster backend in Codex: `imagegen`
    - fallback: the user's own equivalent image model, if Codex imagegen is not available
 
+   When `baoyu-image-cards` and `imagegen` are available in the runtime, use
+   those skills/tools directly. Do not replace this step with shell, Python,
+   browser automation, or generated HTML.
+
    If no real image model/backend is available, stop here and report the block.
    Do not write code that draws substitute cards locally.
 
@@ -26,14 +30,18 @@ template renderer for final images.
 
    `asset-generation/outputs/current-publish-assets.json`
 
-5. Run packaging and Feishu delivery:
+5. Run packaging and Feishu validation:
 
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --local-only`
+
+   Use `--dry-run` to verify Feishu credentials after packaging, and `--send`
+   only when the user explicitly asks to send a real Feishu card.
 
 ## Rules
 
 - Do not generate final cards with PIL, SVG, HTML, canvas, or a template drawing script.
 - Do not create, restore, edit, or run `render_current_cards.py`.
+- Do not use screenshots, browser-rendered HTML, Mermaid, matplotlib, slide decks, or placeholder diagrams as final card substitutes.
 - Do not use placeholder diagrams as final cards.
 - Do not reuse old test images unless the user explicitly asks for a fixture-style dry run.
 - If the image model saves files somewhere else first, move the selected final PNGs into the required workspace paths before packaging.
