@@ -82,18 +82,18 @@ def write_runner() -> None:
 
 
 def register_task() -> dict:
-    cmd_exe = os.environ.get("ComSpec", r"C:\Windows\System32\cmd.exe")
-    cmd_arg = f'/c "{RUNNER}"'
-    ps = "\n".join(
-        [
-            f"$Action = New-ScheduledTaskAction -Execute {ps_quote(cmd_exe)} -Argument {ps_quote(cmd_arg)}",
-            "$Trigger = New-ScheduledTaskTrigger -AtLogOn",
-            "$Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 5)",
-            f"Register-ScheduledTask -TaskName {ps_quote(TASK_NAME)} -Action $Action -Trigger $Trigger -Settings $Settings -Description {ps_quote('Check Feishu delivery credentials after Windows logon. Sends no message.')} -Force | Out-Null",
-        ]
-    )
     completed = subprocess.run(
-        ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps],
+        [
+            "schtasks",
+            "/Create",
+            "/TN",
+            TASK_NAME,
+            "/SC",
+            "ONLOGON",
+            "/TR",
+            f'"{RUNNER}"',
+            "/F",
+        ],
         text=True,
         encoding="utf-8",
         errors="replace",
@@ -102,7 +102,23 @@ def register_task() -> dict:
     )
     if completed.returncode != 0:
         raise RuntimeError((completed.stderr or completed.stdout).strip())
-    return {"method": "scheduled_task", "task_name": TASK_NAME}
+    remove_registry_run()
+    return {
+        "method": "scheduled_task_on_logon",
+        "task_name": TASK_NAME,
+        "task_command": str(RUNNER),
+    }
+
+
+def remove_registry_run() -> None:
+    subprocess.run(
+        ["reg", "delete", r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run", "/v", TASK_NAME, "/f"],
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        capture_output=True,
+        check=False,
+    )
 
 
 def register_system_task() -> dict:
@@ -142,32 +158,45 @@ def register_system_task() -> dict:
 
 
 def write_admin_installer() -> None:
-    python_exe = Path(sys.executable).resolve()
-    script = Path(__file__).resolve()
     ADMIN_INSTALL_CMD.write_text(
         "\n".join(
             [
                 "@echo off",
+                "setlocal",
                 "net session >nul 2>&1",
                 "if not \"%errorlevel%\"==\"0\" (",
                 "  echo Requesting administrator permission...",
                 "  powershell -NoProfile -ExecutionPolicy Bypass -Command \"Start-Process -FilePath '%~f0' -Verb RunAs\"",
                 "  exit /b",
                 ")",
-                "echo Installing XHS Feishu system startup health check...",
-                f'"{python_exe}" "{script}" --system',
-                "set INSTALL_EXIT=%ERRORLEVEL%",
+                f"set \"RUNNER={RUNNER}\"",
+                "echo Installing user-logon health check...",
+                f"schtasks /Create /TN {TASK_NAME} /SC ONLOGON /TR \"\\\"%RUNNER%\\\"\" /F",
+                "set USER_TASK_EXIT=%ERRORLEVEL%",
                 "echo.",
-                "echo Querying installed task...",
+                "echo Installing machine-startup SYSTEM health check...",
+                f"schtasks /Create /TN {SYSTEM_TASK_NAME} /SC ONSTART /RU SYSTEM /RL HIGHEST /TR \"\\\"%RUNNER%\\\"\" /F",
+                "set SYSTEM_TASK_EXIT=%ERRORLEVEL%",
+                "echo.",
+                "echo Querying user-logon task...",
+                f"schtasks /Query /TN {TASK_NAME} /FO LIST /V",
+                "echo.",
+                "echo Querying machine-startup task...",
                 f"schtasks /Query /TN {SYSTEM_TASK_NAME} /FO LIST /V",
                 "echo.",
-                "if \"%INSTALL_EXIT%\"==\"0\" (",
-                "  echo Install command finished successfully.",
+                "if \"%USER_TASK_EXIT%\"==\"0\" (",
+                "  echo User-logon task installed.",
                 ") else (",
-                "  echo Install command failed with exit code %INSTALL_EXIT%.",
+                "  echo User-logon task failed with exit code %USER_TASK_EXIT%.",
+                ")",
+                "if \"%SYSTEM_TASK_EXIT%\"==\"0\" (",
+                "  echo Machine-startup SYSTEM task installed.",
+                ") else (",
+                "  echo Machine-startup SYSTEM task failed with exit code %SYSTEM_TASK_EXIT%.",
                 ")",
                 "pause",
-                "exit /b %INSTALL_EXIT%",
+                "if \"%SYSTEM_TASK_EXIT%\"==\"0\" exit /b 0",
+                "exit /b %USER_TASK_EXIT%",
                 "",
             ]
         ),
