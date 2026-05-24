@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Install or remove a Windows startup health check for Feishu delivery."""
+"""Install or remove a Windows startup health check for Feishu delivery.
+
+The recommended path is user-logon recovery: after Windows login, check Feishu
+credentials automatically and write a log. SYSTEM startup is available for
+unattended machines but depends on local Windows permissions.
+"""
 
 from __future__ import annotations
 
@@ -52,6 +57,7 @@ def startup_folder() -> Path:
 
 
 def write_runner() -> None:
+    """Write the .cmd file that performs the actual Feishu health check."""
     OUT.mkdir(parents=True, exist_ok=True)
     python_exe = Path(sys.executable).resolve()
     check_script = ROOT / "feishu-delivery" / "check_feishu_ready.py"
@@ -82,6 +88,7 @@ def write_runner() -> None:
 
 
 def register_task() -> dict:
+    """Try to create an ONLOGON scheduled task for the current user."""
     completed = subprocess.run(
         [
             "schtasks",
@@ -222,6 +229,7 @@ def install_startup_folder_fallback() -> dict:
 
 
 def install_registry_run_fallback() -> dict:
+    """Fallback when scheduled tasks and Startup folder are blocked."""
     command = f'"{RUNNER}"'
     key = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run"
     completed = subprocess.run(

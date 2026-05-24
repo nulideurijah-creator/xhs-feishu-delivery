@@ -1,1 +1,2 @@
+# Pillow renders the deterministic PNG image cards in image-generation/render_current_cards.py.
 Pillow>=10.0

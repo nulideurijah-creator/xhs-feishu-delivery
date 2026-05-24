@@ -1,4 +1,5 @@
 {
+  "_comment": "Single source of truth for one Xiaohongshu post. Edit this file, then run the workflow to regenerate copy assets, 6 images, and Feishu delivery card.",
   "review_id": "publish-ai-acceptance-first-20260524-001",
   "content_id": "ai-acceptance-first-xhs-20260524-001",
   "title": "先定验收再用AI",

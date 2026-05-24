@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Build a buttonless Feishu delivery card for the current Xiaohongshu package."""
+"""Build a buttonless Feishu delivery card for the current Xiaohongshu package.
+
+The card contains complete copy and image previews for manual posting. It does
+not contain buttons, callbacks, approvals, or Xiaohongshu automation controls.
+"""
 
 from __future__ import annotations
 
@@ -48,6 +52,7 @@ def normalize_tag(value: Any) -> str:
 
 
 def validate_images(package: dict[str, Any]) -> list[dict[str, Any]]:
+    """Ensure the package references 6 approved, non-empty PNG files."""
     images = package.get("images")
     if not isinstance(images, list) or len(images) != 6:
         raise ValueError("current-publish-assets.json must contain exactly 6 images")
@@ -119,6 +124,7 @@ def has_action_or_button(value: Any) -> bool:
 
 
 def validate_card(card: dict[str, Any]) -> None:
+    """Block accidental reintroduction of buttons or approval callbacks."""
     metadata = card.get("metadata")
     if not isinstance(metadata, dict):
         raise ValueError("delivery card must contain metadata")
@@ -141,6 +147,7 @@ def validate_card(card: dict[str, Any]) -> None:
 
 
 def build_card(delivery: dict[str, Any]) -> dict[str, Any]:
+    """Create Feishu card JSON with image placeholders for later upload."""
     image_lines = "\n".join(
         f"{item['index']}. {item['title']}" for item in delivery["images"]
     )

@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Run the Xiaohongshu Feishu delivery workflow in a target workspace."""
+"""Run the Xiaohongshu Feishu delivery workflow in a target workspace.
+
+This is the public skill entrypoint. It does not contain business content itself;
+it validates a target workspace and delegates to the workflow scripts copied
+there by scripts/init_workspace.py.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +18,7 @@ from pathlib import Path
 
 
 BUILD_REQUIRED_FILES = [
+    # Files required for local-only, dry-run, and send modes.
     "asset-generation/content_spec.json",
     "asset-generation/generate_current_assets.py",
     "image-generation/render_current_cards.py",
@@ -23,10 +29,12 @@ BUILD_REQUIRED_FILES = [
 ]
 
 CHECK_REQUIRED_FILES = [
+    # Minimal file required when only checking Feishu credentials.
     "feishu-delivery/check_feishu_ready.py",
 ]
 
 STARTUP_REQUIRED_FILES = [
+    # Minimal file required when installing startup health checks.
     "feishu-delivery/install_startup_check.py",
 ]
 
@@ -43,12 +51,14 @@ def resolve_workspace(raw: str) -> Path:
 
 
 def require_files(workspace: Path, required_files: list[str]) -> None:
+    """Fail early with a clear message if the workspace is incomplete."""
     missing = [path for path in required_files if not (workspace / path).exists()]
     if missing:
         raise FileNotFoundError("workspace is missing required files: " + ", ".join(missing))
 
 
 def run_step(workspace: Path, name: str, args: list[str]) -> None:
+    """Run one workflow step inside the target workspace."""
     print(f"\n== {name} ==")
     completed = subprocess.run(
         args,
@@ -64,6 +74,7 @@ def run_step(workspace: Path, name: str, args: list[str]) -> None:
 
 @contextmanager
 def workflow_lock(workspace: Path):
+    """Prevent two runs from writing the same output files at the same time."""
     lock_path = workspace / ".xhs_delivery.lock"
     if lock_path.exists():
         age = time.time() - lock_path.stat().st_mtime
@@ -108,7 +119,11 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str]) -> int:
     args = build_parser().parse_args(argv)
     if args.init_workspace:
-        run_step(Path(__file__).resolve().parents[1], "init_workspace", [sys.executable, ".\\scripts\\init_workspace.py", "--workspace", args.workspace])
+        run_step(
+            Path(__file__).resolve().parents[1],
+            "init_workspace",
+            [sys.executable, ".\\scripts\\init_workspace.py", "--workspace", args.workspace],
+        )
         return 0
 
     workspace = resolve_workspace(args.workspace)

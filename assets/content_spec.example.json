@@ -1,4 +1,5 @@
 {
+  "_comment": "Example content spec. Copy the shape into a workspace content_spec.json and replace the topic, copy, tags, and 6 page definitions.",
   "review_id": "publish-example-20260524-001",
   "content_id": "example-xhs-20260524-001",
   "title": "AI工具别急着用",

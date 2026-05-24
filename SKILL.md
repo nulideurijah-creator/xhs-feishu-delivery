@@ -52,6 +52,7 @@ Use this skill to operate the local workflow that creates a Xiaohongshu image-te
 
 ## References
 
+- For repository structure and every tracked file, read `PROJECT_GUIDE.md`.
 - For the content spec shape, read `references/content_spec.md`.
 - For a sanitized starter spec, copy from `assets/content_spec.example.json`.
 

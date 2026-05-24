@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Create a local workspace from the bundled workflow template."""
+"""Create a local workspace from the bundled workflow template.
+
+The skill folder is read-only instructional code. The generated workspace is
+where users keep Feishu credentials, generated images, and output packages.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +17,7 @@ TEMPLATE = SKILL_ROOT / "assets" / "workspace-template"
 
 
 def copy_template(workspace: Path, force: bool) -> list[str]:
+    """Copy template files while preserving existing user edits by default."""
     if not TEMPLATE.exists():
         raise FileNotFoundError(f"workspace template missing: {TEMPLATE}")
     workspace.mkdir(parents=True, exist_ok=True)
@@ -21,6 +26,8 @@ def copy_template(workspace: Path, force: bool) -> list[str]:
         if source.is_dir():
             continue
         relative = source.relative_to(TEMPLATE)
+        if "__pycache__" in relative.parts or source.suffix == ".pyc":
+            continue
         target = workspace / relative
         if target.exists() and not force:
             continue
@@ -31,6 +38,7 @@ def copy_template(workspace: Path, force: bool) -> list[str]:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Define CLI flags for workspace initialization."""
     parser = argparse.ArgumentParser(description="Initialize an XHS Feishu delivery workspace")
     parser.add_argument("--workspace", required=True, help="Target workspace path")
     parser.add_argument("--force", action="store_true", help="Overwrite existing template files")

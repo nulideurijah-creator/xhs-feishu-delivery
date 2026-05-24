@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Check that the skill directory contains no local secrets or publish automation."""
+"""Check that the skill directory contains no local secrets or publish automation.
+
+This is intentionally simple and conservative. It catches the risky artifacts
+that should never be shipped in the public skill repository.
+"""
 
 from __future__ import annotations
 
@@ -8,12 +12,15 @@ from pathlib import Path
 
 
 FORBIDDEN_NAMES = {
+    # Files that commonly contain real account state or local credentials.
     ".env",
     "cookies.json",
     "xhs-login-qrcode.png",
 }
 
 FORBIDDEN_TEXT = [
+    # Terms from removed auto-publish or callback flows. Their presence usually
+    # means the repo is drifting away from manual-only Xiaohongshu posting.
     "publish_content",
     "--confirm-publish",
     "xiaohongshu-mcp",
@@ -35,6 +42,7 @@ TEXT_EXTENSIONS = {
 
 
 def iter_text_files(root: Path):
+    """Yield text-like files that should be scanned for risky content."""
     for path in root.rglob("*"):
         if not path.is_file():
             continue
@@ -47,6 +55,7 @@ def iter_text_files(root: Path):
 
 
 def validate(root: Path) -> list[str]:
+    """Return every forbidden-text hit found under the skill directory."""
     hits: list[str] = []
     for path in iter_text_files(root):
         text = path.read_text(encoding="utf-8", errors="ignore")

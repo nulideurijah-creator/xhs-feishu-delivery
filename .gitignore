@@ -1,3 +1,5 @@
+# Repository-level ignore rules.
+# Keep local secrets, generated media, logs, and caches out of the public skill repo.
 .env
 **/.env
 __pycache__/

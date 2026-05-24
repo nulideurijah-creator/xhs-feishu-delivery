@@ -1,3 +1,5 @@
+# Workspace-level ignore rules.
+# Generated workspaces may contain credentials and output files; do not commit them.
 .env
 feishu-delivery/.env
 **/outputs/

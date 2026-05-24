@@ -2,6 +2,8 @@
 
 The workspace file `asset-generation/content_spec.json` is the single source of truth for one Xiaohongshu post.
 
+Use this reference when editing the JSON file by hand. JSON does not support real comments, so explanatory notes live here and in `PROJECT_GUIDE.md`.
+
 For a new workspace, initialize the bundled template first:
 
 `python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Check whether Feishu delivery credentials still work after restart."""
+"""Check whether Feishu delivery credentials still work after restart.
+
+This script only obtains a Feishu tenant token. It does not upload images and
+does not send any Feishu message, so it is safe to run at startup.
+"""
 
 from __future__ import annotations
 
@@ -31,6 +35,7 @@ def now() -> str:
 
 
 def load_env() -> dict[str, str]:
+    """Load Feishu settings from feishu-delivery/.env and environment variables."""
     result: dict[str, str] = {}
     env_path = WORK_DIR / ".env"
     if env_path.exists():
@@ -79,6 +84,7 @@ def http_json(url: str, payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def get_tenant_access_token(env: dict[str, str]) -> str:
+    """Request a Feishu tenant token to prove credentials are still valid."""
     data = http_json(
         TOKEN_URL,
         {"app_id": env["FEISHU_APP_ID"], "app_secret": env["FEISHU_APP_SECRET"]},

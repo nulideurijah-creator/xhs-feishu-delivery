@@ -1,3 +1,4 @@
+# Codex UI metadata for the skill card and default invocation prompt.
 interface:
   display_name: "XHS Feishu Delivery"
   short_description: "Generate Xiaohongshu packages and Feishu delivery cards"

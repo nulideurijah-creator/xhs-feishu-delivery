@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Validate or send the Feishu delivery card."""
+"""Validate or send the Feishu delivery card.
+
+Modes:
+- local-only: validate files only, no Feishu credentials needed.
+- dry-run: validate Feishu credentials, no image upload or message send.
+- send: upload images to Feishu and send the final interactive card.
+"""
 
 from __future__ import annotations
 
@@ -96,6 +102,7 @@ def has_action_or_button(value: Any) -> bool:
 
 
 def validate_card(card: dict[str, Any]) -> None:
+    """Ensure the card stays buttonless and manual-publish only."""
     metadata = card.get("metadata")
     if not isinstance(metadata, dict):
         raise ValueError("delivery card must contain metadata")
@@ -118,6 +125,7 @@ def validate_card(card: dict[str, Any]) -> None:
 
 
 def validate_images(delivery: dict[str, Any]) -> list[Path]:
+    """Resolve and validate all 6 local PNG files before any Feishu send."""
     images = delivery.get("images")
     if not isinstance(images, list) or len(images) != 6:
         raise ValueError("delivery request must contain 6 images")
@@ -197,6 +205,7 @@ def build_multipart_image_body(image_path: Path) -> tuple[bytes, str]:
 
 
 def upload_image(token: str, image_path: Path) -> str:
+    """Upload one image to Feishu and return its image_key."""
     body, boundary = build_multipart_image_body(image_path)
     req = request.Request(
         IMAGE_URL,
@@ -235,6 +244,7 @@ def replace_placeholders(value: Any, image_keys: dict[str, str]) -> Any:
 
 
 def send_message(env: dict[str, str], token: str, card: dict[str, Any]) -> dict[str, Any]:
+    """Send the final interactive card to the configured Feishu receiver."""
     query = parse.urlencode({"receive_id_type": env["FEISHU_RECEIVE_ID_TYPE"]})
     return http_json(
         f"{MESSAGE_URL}?{query}",

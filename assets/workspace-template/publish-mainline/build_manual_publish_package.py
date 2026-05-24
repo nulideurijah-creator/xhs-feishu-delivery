@@ -1,3 +1,9 @@
+"""Build a local manual publishing package from generated assets.
+
+The output is useful even when Feishu sending is disabled: it gives the user a
+plain Markdown/JSON package with title, body, tags, and image paths.
+"""
+
 from __future__ import annotations
 
 import json
@@ -30,6 +36,7 @@ def normalize_tag(value: Any) -> str:
 
 
 def validate_assets(package: dict[str, Any]) -> tuple[list[str], list[dict[str, Any]]]:
+    """Check that the generated asset package is complete enough to publish manually."""
     errors: list[str] = []
     title = str(package.get("title", "")).strip()
     body = str(package.get("body_full", "")).strip()
@@ -74,6 +81,7 @@ def validate_assets(package: dict[str, Any]) -> tuple[list[str], list[dict[str, 
 
 
 def render_markdown(result: dict[str, Any]) -> str:
+    """Render a human-readable manual posting package."""
     image_lines = "\n".join(
         f"{item['index']}. `{item['image_abs_path']}`" for item in result["images"]
     )
@@ -103,6 +111,7 @@ def render_markdown(result: dict[str, Any]) -> str:
 
 
 def build_package() -> dict[str, Any]:
+    """Build the normalized publishing package used by preflight and Feishu."""
     package = load_json(ASSET_PACKAGE)
     if not package:
         raise FileNotFoundError(ASSET_PACKAGE)

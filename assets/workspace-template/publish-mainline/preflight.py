@@ -1,3 +1,9 @@
+"""Check whether the manual publish package is ready to deliver.
+
+This step is deliberately strict: later Feishu delivery should only happen when
+title, body, tags, and all 6 images are present.
+"""
+
 from __future__ import annotations
 
 import json
@@ -23,6 +29,7 @@ def load_json(path: Path) -> dict:
 
 
 def run_step(name: str, args: list[str], timeout: int = 180) -> dict:
+    """Run a diagnostic command and capture output for the preflight report."""
     completed = subprocess.run(
         args,
         cwd=ROOT,
@@ -44,6 +51,7 @@ def run_step(name: str, args: list[str], timeout: int = 180) -> dict:
 
 
 def summarize(report: dict) -> str:
+    """Render a short Markdown summary for humans checking readiness."""
     package = report.get("manual_package", {})
     lines = [
         "# 小红书发布内容包 Preflight",

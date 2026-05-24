@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Generate the current Xiaohongshu manual publish asset package from a spec."""
+"""Generate the current Xiaohongshu manual publish asset package from a spec.
+
+Reads asset-generation/content_spec.json and writes structured outputs used by
+image rendering, local publishing-package generation, and Feishu delivery.
+"""
 
 from __future__ import annotations
 
@@ -17,6 +21,8 @@ TITLE_PATH = OUT / "current-title-candidates.md"
 PROMPT_PACKAGE_PATH = OUT / "current-image-card-prompts.md"
 
 FORBIDDEN_PHRASES = [
+    # Phrases the original workflow owner rejected during real content review.
+    # Keep this list short and concrete; it prevents known AI-sounding wording.
     "它做的事很直接",
     "这个数据先当热度参考",
     "但别只看 GitHub star",
@@ -50,6 +56,7 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
 
 
 def validate_spec(spec: dict[str, Any]) -> None:
+    """Validate business rules before any image or Feishu work begins."""
     required = ["review_id", "content_id", "title", "body_full", "tags", "pages"]
     missing = [key for key in required if not spec.get(key)]
     if missing:
@@ -142,6 +149,7 @@ Constraints:
 
 
 def build_package(spec: dict[str, Any]) -> dict[str, Any]:
+    """Create the machine-readable asset package consumed by later steps."""
     prompt_dir = ROOT / "image-generation" / "prompts" / spec["image_slug"]
     image_dir = ROOT / "image-generation" / "outputs" / "images" / spec["image_slug"]
     images: list[dict[str, Any]] = []

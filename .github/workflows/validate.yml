@@ -1,3 +1,4 @@
+# CI keeps the public skill installable and free of obvious unsafe artifacts.
 name: validate
 
 on:
@@ -13,6 +14,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile scripts
-        run: python -m py_compile scripts/run_xhs_delivery.py scripts/validate_skill_safety.py
+        run: python -m compileall -q scripts assets/workspace-template
       - name: Safety scan
         run: python scripts/validate_skill_safety.py --skill-dir .

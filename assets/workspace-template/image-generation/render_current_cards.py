@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Render deterministic PNG image cards for the current content spec."""
+"""Render deterministic PNG image cards for the current content spec.
+
+The renderer intentionally avoids external design services so local validation
+can run consistently. Users can replace this file later if they want a different
+image-generation backend.
+"""
 
 from __future__ import annotations
 
@@ -53,6 +58,7 @@ F_FOOT = font(FONT_LIGHT, 21)
 
 
 def load_spec() -> dict:
+    """Load the current post spec that controls all 6 image cards."""
     data = json.loads(SPEC_PATH.read_text(encoding="utf-8-sig"))
     if not isinstance(data, dict):
         raise ValueError("content_spec.json must contain an object")
@@ -300,6 +306,7 @@ def visual_comment(draw: ImageDraw.ImageDraw) -> None:
 
 
 def render_page(spec: dict, page: dict, index: int, out_path: Path) -> None:
+    """Render one vertical Xiaohongshu card to a PNG file."""
     image = Image.new("RGB", (W, H), BG)
     draw = ImageDraw.Draw(image)
     decorate_background(draw)
@@ -330,6 +337,7 @@ def render_page(spec: dict, page: dict, index: int, out_path: Path) -> None:
 
 
 def iter_pages(spec: dict) -> Iterable[tuple[int, dict]]:
+    """Yield exactly 6 page definitions in publishing order."""
     pages = spec.get("pages", [])
     if not isinstance(pages, list) or len(pages) != 6:
         raise ValueError("content_spec must contain exactly 6 pages")

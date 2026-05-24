@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Run the Xiaohongshu manual delivery workflow end to end."""
+"""Run the Xiaohongshu manual delivery workflow end to end.
+
+This workspace-local runner is what users call after initializing a workspace.
+It keeps all generated files in this workspace and never publishes to
+Xiaohongshu automatically.
+"""
 
 from __future__ import annotations
 
@@ -18,6 +23,7 @@ LOCK_TTL_SECONDS = 2 * 60 * 60
 
 
 def run_step(name: str, args: list[str]) -> None:
+    """Run one deterministic workflow step and stop immediately on failure."""
     print(f"\n== {name} ==")
     completed = subprocess.run(
         args,
@@ -33,6 +39,7 @@ def run_step(name: str, args: list[str]) -> None:
 
 @contextmanager
 def workflow_lock():
+    """Prevent concurrent runs from corrupting image/package outputs."""
     if LOCK_PATH.exists():
         age = time.time() - LOCK_PATH.stat().st_mtime
         if age > LOCK_TTL_SECONDS:
