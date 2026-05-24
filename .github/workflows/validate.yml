@@ -20,3 +20,7 @@ jobs:
           python -c "import json, pathlib; [json.loads(pathlib.Path(p).read_text(encoding='utf-8-sig')) for p in ['assets/content_spec.example.json','assets/workspace-template/asset-generation/content_spec.json']]"
       - name: Safety scan
         run: python scripts/validate_skill_safety.py --skill-dir .
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Smoke test
+        run: python scripts/smoke_test_skill.py --skill-dir .

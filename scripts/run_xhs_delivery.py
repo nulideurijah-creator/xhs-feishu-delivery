@@ -37,6 +37,11 @@ STARTUP_REQUIRED_FILES = [
     "feishu-delivery/install_startup_check.py",
 ]
 
+DOCTOR_REQUIRED_FILES = [
+    # Read-only workspace diagnostics.
+    "diagnostics/doctor.py",
+]
+
 LOCK_TTL_SECONDS = 2 * 60 * 60
 
 
@@ -106,6 +111,7 @@ def build_parser() -> argparse.ArgumentParser:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--init-workspace", action="store_true", help="Create the workspace from this skill's bundled template")
     mode.add_argument("--check-feishu", action="store_true", help="Check Feishu credentials without building or sending")
+    mode.add_argument("--doctor", action="store_true", help="Run read-only workspace diagnostics and write a doctor report")
     mode.add_argument("--install-startup-check", action="store_true", help="Install a Windows logon Feishu health check")
     mode.add_argument("--install-system-startup-check", action="store_true", help="Install a Windows startup health check; requires administrator")
     mode.add_argument("--uninstall-startup-check", action="store_true", help="Remove the Windows logon Feishu health check")
@@ -129,6 +135,10 @@ def main(argv: list[str]) -> int:
     if args.check_feishu:
         require_files(workspace, CHECK_REQUIRED_FILES)
         run_step(workspace, "check_feishu_ready", [sys.executable, ".\\feishu-delivery\\check_feishu_ready.py"])
+        return 0
+    if args.doctor:
+        require_files(workspace, DOCTOR_REQUIRED_FILES)
+        run_step(workspace, "doctor", [sys.executable, ".\\diagnostics\\doctor.py"])
         return 0
     if args.install_startup_check:
         require_files(workspace, STARTUP_REQUIRED_FILES)

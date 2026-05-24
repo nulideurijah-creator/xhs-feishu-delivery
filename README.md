@@ -103,6 +103,12 @@ Check Feishu credentials:
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --check-feishu
 ```
 
+Run a local doctor before using the workflow from a new Codex window:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --doctor
+```
+
 Send the complete package to Feishu:
 
 ```powershell
@@ -137,7 +143,9 @@ python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_deliv
 
 ```powershell
 python scripts\validate_skill_safety.py --skill-dir .
-python -m py_compile scripts\run_xhs_delivery.py scripts\init_workspace.py scripts\validate_skill_safety.py
+python -m compileall -q scripts assets\workspace-template tests
+python -m unittest discover -s tests -v
+python scripts\smoke_test_skill.py --skill-dir .
 ```
 
 ## License

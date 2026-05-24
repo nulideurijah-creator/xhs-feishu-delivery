@@ -27,6 +27,7 @@ This guide explains every tracked file in the repository so a new user can under
 | `scripts/run_xhs_delivery.py` | Main wrapper used by the skill. It initializes workspaces, checks Feishu, installs startup checks, and runs the full package workflow. |
 | `scripts/init_workspace.py` | Copies `assets/workspace-template` into a user-selected local workspace. |
 | `scripts/validate_skill_safety.py` | Scans the skill folder to make sure secrets and Xiaohongshu auto-publish artifacts are not present. |
+| `scripts/smoke_test_skill.py` | Creates a temporary workspace and verifies the installed skill can initialize, generate asset metadata, and preserve the mature skill chain. |
 
 ## Example Assets
 
@@ -46,6 +47,7 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | `assets/workspace-template/run_xhs_delivery.py` | Workspace-local packaging and Feishu runner. It mirrors the skill wrapper but does not require `--workspace`. |
 | `assets/workspace-template/asset-generation/content_spec.json` | Editable post specification. Users change this file to create a new post. |
 | `assets/workspace-template/asset-generation/generate_current_assets.py` | Validates the spec, writes copy/title/prompt outputs, and prepares image paths for model-generated cards. |
+| `assets/workspace-template/diagnostics/doctor.py` | Read-only workspace doctor. It writes diagnostics reports without sending Feishu messages or generating images. |
 | `assets/workspace-template/image-generation/.gitkeep` | Keeps the model-image directory in the template. Prompt files and PNG outputs are generated here at runtime. |
 | `assets/workspace-template/publish-mainline/build_manual_publish_package.py` | Builds the local manual publishing package from generated assets. |
 | `assets/workspace-template/publish-mainline/preflight.py` | Checks whether the manual package is ready and records any blocking issues. |
@@ -59,7 +61,13 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 
 | File | Purpose |
 |---|---|
-| `.github/workflows/validate.yml` | GitHub Actions workflow that compiles scripts and runs the safety scan on every push and pull request. |
+| `.github/workflows/validate.yml` | GitHub Actions workflow that compiles scripts, validates JSON examples, runs the safety scan, runs unit tests, and runs the smoke test on every push and pull request. |
+
+## Tests
+
+| File | Purpose |
+|---|---|
+| `tests/test_skill_stability.py` | Regression tests for mature skill chain rules, workspace initialization, doctor diagnostics, prompt metadata, and safety scanning. |
 
 ## What Users Usually Edit
 

@@ -66,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run XHS delivery workflow")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check-feishu", action="store_true", help="Check Feishu credentials without building or sending")
+    mode.add_argument("--doctor", action="store_true", help="Run read-only workspace diagnostics and write a doctor report")
     mode.add_argument("--install-startup-check", action="store_true", help="Install a Windows logon Feishu health check")
     mode.add_argument("--install-system-startup-check", action="store_true", help="Install a Windows startup health check; requires administrator")
     mode.add_argument("--uninstall-startup-check", action="store_true", help="Remove the Windows logon Feishu health check")
@@ -79,6 +80,9 @@ def main(argv: list[str]) -> int:
     args = build_parser().parse_args(argv)
     if args.check_feishu:
         run_step("check_feishu_ready", [sys.executable, ".\\feishu-delivery\\check_feishu_ready.py"])
+        return 0
+    if args.doctor:
+        run_step("doctor", [sys.executable, ".\\diagnostics\\doctor.py"])
         return 0
     if args.install_startup_check:
         run_step("install_startup_check", [sys.executable, ".\\feishu-delivery\\install_startup_check.py"])
