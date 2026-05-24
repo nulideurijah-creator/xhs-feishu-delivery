@@ -21,8 +21,8 @@ TITLE_PATH = OUT / "current-title-candidates.md"
 PROMPT_PACKAGE_PATH = OUT / "current-image-card-prompts.md"
 
 FORBIDDEN_PHRASES = [
-    # Phrases the original workflow owner rejected during real content review.
-    # Keep this list short and concrete; it prevents known AI-sounding wording.
+    # Phrases that tend to make Chinese social copy sound generic or AI-written.
+    # Keep this list short and concrete; users can adapt it in their workspace.
     "它做的事很直接",
     "这个数据先当热度参考",
     "但别只看 GitHub star",
@@ -192,8 +192,8 @@ def build_package(spec: dict[str, Any]) -> dict[str, Any]:
         "auto_publish_enabled": False,
         "publish_checks": [
             "内容保持 AI 圈热点垂类，不混入泛生活选题。",
-            "正文已避开用户指出的 AI 感表达。",
-            "账号收到小红书 AI 使用违规警报，当前禁止 MCP 或浏览器脚本真实发布。",
+            "正文已避开常见 AI 感表达。",
+            "图片由模型生成，脚本不使用本地模板渲染器冒充成品图。",
             "飞书只交付完整内容，不自动发布到小红书。",
             "标签由发布人手动在小红书 App 或网页发布页选择。",
             "不包含音乐字段或选曲说明。",

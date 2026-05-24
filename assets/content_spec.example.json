@@ -1,69 +1,69 @@
 {
   "_comment": "Example content spec. Copy the shape into a workspace content_spec.json and replace the topic, copy, tags, and 6 page definitions.",
-  "review_id": "publish-example-20260524-001",
-  "content_id": "example-xhs-20260524-001",
-  "title": "AI工具别急着用",
-  "summary": "AI 圈热点图文成品：解释一个新 AI 工具为什么值得关注，以及普通用户该怎么判断。",
-  "topic": "某个 AI 工具的新能力",
-  "hot_source": "AI HOT 精选 + 官方来源核验",
+  "review_id": "publish-example-001",
+  "content_id": "example-xhs-001",
+  "title": "AI工具先看3点",
+  "summary": "A neutral example for explaining how to judge whether a new AI tool is worth trying.",
+  "topic": "如何判断一个新 AI 工具值不值得试",
+  "hot_source": "starter example",
   "source_urls": [
     "https://example.com/source"
   ],
   "source_verification": {
-    "source": "官方公告或可信来源",
-    "published_at": "2026-05-24T00:00:00+08:00",
-    "note": "只解读公开信息，不承诺产品效果。"
+    "source": "Replace with the official announcement, changelog, or primary source you used.",
+    "published_at": "",
+    "note": "This file is only a schema example. Verify real claims before delivery."
   },
   "body_full": "这里写最终小红书正文。保持口语、具体、有判断，不要写成模板套话。正文总长度必须控制在 1000 字以内。",
   "tags": [
     "AI工具",
     "AI效率",
-    "AI编程"
+    "工作流"
   ],
   "title_candidates": [
     {
-      "title": "AI工具别急着用",
-      "type": "风险提醒",
-      "reason": "提醒用户先判断适用场景。"
+      "title": "AI工具先看3点",
+      "type": "收藏价值",
+      "reason": "给读者一个可执行的判断清单。"
     }
   ],
-  "image_slug": "example-20260524",
+  "image_slug": "example-ai-tool-evaluation",
   "pages": [
     {
       "page_id": "01-cover",
-      "title": "AI工具别急着用",
-      "subtitle": "先看清它解决什么问题",
-      "visual": "一个人站在工具箱前，用放大镜检查一个 AI 工具。"
+      "title": "AI工具先看3点",
+      "subtitle": "别只看演示，先看能不能进流程",
+      "visual": "一位创作者站在几个 AI 工具卡片前，用放大镜检查其中一个工具。"
     },
     {
-      "page_id": "02-context",
-      "title": "发生了什么",
-      "subtitle": "一句话讲清新变化",
-      "visual": "一张简洁的信息卡，展示公告、功能、用户三者关系。"
+      "page_id": "02-problem",
+      "title": "别只看宣传词",
+      "subtitle": "演示好看，不等于日常好用",
+      "visual": "产品演示屏和实际工作桌面的对比。"
     },
     {
-      "page_id": "03-value",
-      "title": "真正价值",
-      "subtitle": "不是新功能，而是新流程",
-      "visual": "旧流程和新流程对比图。"
+      "page_id": "03-need",
+      "title": "先看真实需求",
+      "subtitle": "是不是每天会遇到的问题",
+      "visual": "真实任务、重复场景、交付对象三个检查标签。"
     },
     {
-      "page_id": "04-check",
-      "title": "怎么判断",
-      "subtitle": "看需求、成本、风险",
-      "visual": "三格检查清单。"
+      "page_id": "04-workflow",
+      "title": "再看接入成本",
+      "subtitle": "输入、输出、检查，能不能连起来",
+      "visual": "从资料输入到人工检查的简单流程线。"
     },
     {
       "page_id": "05-risk",
-      "title": "别直接上线",
-      "subtitle": "AI 输出仍要人工验收",
-      "visual": "发布按钮前的暂停标志和检查清单。"
+      "title": "最后看风险边界",
+      "subtitle": "账号、资料、发布，都要有人确认",
+      "visual": "发布按钮前的暂停标志和人工确认清单。"
     },
     {
       "page_id": "06-comment",
-      "title": "你会怎么用",
-      "subtitle": "欢迎说说你的场景",
-      "visual": "评论区气泡围绕几个使用场景标签。"
+      "title": "你会怎么判断",
+      "subtitle": "说说哪个 AI 工具真正留在了你的流程里",
+      "visual": "评论区气泡围绕省时间、能复用、风险低、容易检查。"
     }
   ]
 }

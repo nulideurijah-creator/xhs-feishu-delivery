@@ -1,87 +1,80 @@
 {
-  "_comment": "Single source of truth for one Xiaohongshu post. Edit this file, then run the workflow to regenerate copy assets, 6 images, and Feishu delivery card.",
-  "review_id": "publish-ai-acceptance-first-20260524-001",
-  "content_id": "ai-acceptance-first-xhs-20260524-001",
-  "title": "先定验收再用AI",
-  "summary": "一篇面向 AI 工具和开发效率用户的小红书图文：用 AI 前先写清楚验收标准，减少返工。",
-  "topic": "AI 协作前先写验收标准",
-  "hot_source": "本地常青选题",
-  "source_urls": [],
+  "_comment": "Starter content spec for one Xiaohongshu image-text post. Replace all topic, copy, tags, and page fields before real delivery.",
+  "review_id": "publish-starter-ai-tool-001",
+  "content_id": "starter-ai-tool-xhs-001",
+  "title": "AI工具先看3点",
+  "summary": "A neutral starter post for explaining how to judge whether a new AI tool is worth trying.",
+  "topic": "如何判断一个新 AI 工具值不值得试",
+  "hot_source": "starter example",
+  "source_urls": [
+    "https://example.com/source"
+  ],
   "source_verification": {
-    "note": "常青方法论内容，不依赖实时新闻、价格、法规或第三方数据；用于 AI 工具与开发效率垂类。"
+    "source": "Replace with the official announcement, changelog, or primary source you used.",
+    "published_at": "",
+    "note": "This starter file is only a format example. Verify real claims before delivery."
   },
-  "body_full": "很多人用 AI 干活，第一步就把任务丢过去：\n“帮我写个方案”\n“帮我改段代码”\n“帮我整理成表格”\n\n结果最常见的问题不是 AI 不会做，而是你验收不了。\n它看起来很完整，但可能方向偏了、边界漏了、细节没按你的业务来。\n\n我现在更建议先写一个很短的验收标准，再让 AI 开始干活。\n\n可以用这个模板：\n1. 最终交付物是什么\n2. 必须覆盖哪 3 个点\n3. 不能出现什么\n4. 完成后怎么判断可用\n\n比如你让 AI 写一篇小红书文案，不要只说“写得自然一点”。\n可以改成：\n标题不超过 20 字；\n正文 800 字以内；\n开头要指出一个真实痛点；\n不要写成课程广告；\n最后留一个能引发评论的问题。\n\n这样做的好处是，AI 的输出会更贴近目标，你也不会靠感觉反复改。\n如果结果不对，可以直接对照验收标准指出：\n第 2 点没覆盖；\n第 3 点踩了禁区；\n结尾没有评论钩子。\n\nAI 真正省时间的地方，不是第一次就给你完美答案。\n而是你把标准说清楚以后，它能更快地沿着同一个方向迭代。\n\n下次用 AI 前，先别急着发任务。\n先花 1 分钟写验收标准。\n这 1 分钟，通常能省掉后面 30 分钟返工。\n\n你最常让 AI 返工的原因是什么？",
+  "body_full": "看到一个新 AI 工具，先别急着收藏或转发。\n\n真正值得看的不是宣传词，而是三个问题：\n\n第一，它解决的是不是你真实会遇到的问题。很多工具演示很好看，但只适合展示，不一定能进入你的日常流程。\n\n第二，它能不能接到你现在的工作方式里。比如输入材料从哪里来，结果要交给谁，出错以后谁来检查。\n\n第三，它有没有明确的风险边界。涉及账号、客户资料、发布内容或代码修改时，都要保留人工确认。\n\n我的判断方法很简单：先拿一个低风险的小任务试一遍，再看它能不能稳定省时间。\n\n如果只是第一次看起来很惊艳，但后面每次都要花很多时间修，那就还不适合放进正式流程。\n\n你最近试过哪个 AI 工具？真正留下来的原因是什么？",
   "tags": [
     "AI工具",
     "AI效率",
-    "提示词",
     "工作流",
     "内容生产"
   ],
   "title_candidates": [
     {
-      "title": "先定验收再用AI",
-      "type": "方法钩子",
-      "reason": "直接给出可执行动作，适合工具效率垂类。"
+      "title": "AI工具先看3点",
+      "type": "收藏价值",
+      "reason": "给读者一个可执行的判断清单。"
     },
     {
-      "title": "别把任务直接丢给AI",
-      "type": "风险提醒",
-      "reason": "指出常见误区，引出验收标准。"
+      "title": "别急着追新AI工具",
+      "type": "反差提醒",
+      "reason": "用提醒式开头降低盲目追热点的感觉。"
     },
     {
-      "title": "AI返工多半怪这里",
-      "type": "痛点归因",
-      "reason": "把读者的返工体验转成继续阅读的动机。"
-    },
-    {
-      "title": "用AI前先写这4句",
-      "type": "清单承诺",
-      "reason": "强调模板感，适合收藏。"
-    },
-    {
-      "title": "AI不是差在输出",
-      "type": "反常识判断",
-      "reason": "把问题从模型能力转到用户验收能力。"
+      "title": "这个AI工具值得用吗",
+      "type": "问题钩子",
+      "reason": "贴近日常决策场景，适合引出判断框架。"
     }
   ],
-  "image_slug": "ai-acceptance-first-20260524",
+  "image_slug": "starter-ai-tool-evaluation",
   "pages": [
     {
       "page_id": "01-cover",
-      "title": "先定验收再用AI",
-      "subtitle": "别把返工留给结果出来后",
-      "visual": "一个任务卡先进入验收清单，再交给 AI 助手处理，画面强调“先定标准，再开始生成”。"
+      "title": "AI工具先看3点",
+      "subtitle": "别只看演示，先看能不能进流程",
+      "visual": "一位创作者站在几个 AI 工具卡片前，用放大镜检查其中一个工具，旁边有三枚清晰的检查标记。"
     },
     {
       "page_id": "02-problem",
-      "title": "问题不在会不会",
-      "subtitle": "而是你能不能验收",
-      "visual": "左侧是看似完整的 AI 输出，右侧是放大镜发现方向、边界、细节三个隐藏问题。"
+      "title": "别只看宣传词",
+      "subtitle": "演示好看，不等于日常好用",
+      "visual": "左侧是闪亮的产品演示屏，右侧是实际工作桌面，画面用对比关系表现展示效果和真实使用之间的差距。"
     },
     {
-      "page_id": "03-template",
-      "title": "4句验收模板",
-      "subtitle": "交付物 / 覆盖点 / 禁区 / 可用标准",
-      "visual": "四格清单：最终交付物、必须覆盖、不能出现、如何判断可用。"
+      "page_id": "03-need",
+      "title": "先看真实需求",
+      "subtitle": "它解决的是不是你每天会遇到的问题",
+      "visual": "一个问题清单被逐项勾选，重点突出真实任务、重复场景、交付对象三个标签。"
     },
     {
-      "page_id": "04-example",
-      "title": "文案任务这样写",
-      "subtitle": "把“自然一点”改成可检查条件",
-      "visual": "左右对比：模糊写法是一团雾，可检查写法是带勾选框的具体条件。"
+      "page_id": "04-workflow",
+      "title": "再看接入成本",
+      "subtitle": "输入、输出、检查，能不能连起来",
+      "visual": "一条简单流程线从资料输入、AI 处理、人工检查到最终交付，节点之间连接清楚。"
     },
     {
-      "page_id": "05-iterate",
-      "title": "返工要有依据",
-      "subtitle": "对照标准改，比凭感觉改更快",
-      "visual": "反馈循环图：输出、检查、指出第几条没过、再迭代，形成闭环。"
+      "page_id": "05-risk",
+      "title": "最后看风险边界",
+      "subtitle": "账号、资料、发布，都要有人确认",
+      "visual": "一个发布按钮前有暂停标志和人工确认清单，强调安全边界和人工审核。"
     },
     {
       "page_id": "06-comment",
-      "title": "你卡在哪一步",
-      "subtitle": "方向、边界、细节，还是最后验收？",
-      "visual": "评论区气泡围绕四个选项：方向、边界、细节、验收，鼓励读者留言。"
+      "title": "你会怎么判断",
+      "subtitle": "说说哪个 AI 工具真正留在了你的流程里",
+      "visual": "评论区气泡围绕几个关键词：省时间、能复用、风险低、容易检查。"
     }
   ]
 }

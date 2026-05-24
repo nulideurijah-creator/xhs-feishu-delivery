@@ -18,6 +18,7 @@ This guide explains every tracked file in the repository so a new user can under
 |---|---|
 | `agents/openai.yaml` | Display metadata used by Codex UI: name, short description, and default prompt. |
 | `references/content_spec.md` | Field-by-field reference for `content_spec.json`, the single source of truth for a post. |
+| `references/image_generation.md` | Contract for generating the 6 final PNG cards with `baoyu-image-cards`, Codex `imagegen`, or the user's equivalent image model. |
 
 ## Skill Scripts
 

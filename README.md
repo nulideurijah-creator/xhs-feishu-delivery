@@ -31,6 +31,8 @@ flowchart LR
 
 Every file in this repository is explained in [PROJECT_GUIDE.md](PROJECT_GUIDE.md).
 
+The image-generation handoff is documented in [references/image_generation.md](references/image_generation.md).
+
 ## Install Skill
 
 ```powershell
@@ -74,6 +76,7 @@ python .\asset-generation\generate_current_assets.py
 
 # Then generate the 6 PNG cards with baoyu-image-cards / Codex imagegen and
 # save them to the image_path values in asset-generation\outputs\current-publish-assets.json.
+# If you use another image model, keep the same output paths.
 
 # Finally package and validate:
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --local-only

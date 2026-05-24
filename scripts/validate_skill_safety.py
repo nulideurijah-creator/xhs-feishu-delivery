@@ -16,6 +16,7 @@ FORBIDDEN_NAMES = {
     ".env",
     "cookies.json",
     "xhs-login-qrcode.png",
+    "render_current_cards.py",
 }
 
 FORBIDDEN_TEXT = [
@@ -29,6 +30,13 @@ FORBIDDEN_TEXT = [
     "localtunnel",
     "ngrok",
     "om_x100",
+    "ai-acceptance-first",
+    "replit-squidler",
+    "D:\\VIBE CODING",
+    "C:\\Users\\admin",
+    "render_image_cards",
+    "image-generation/render_current_cards.py",
+    "账号收到小红书 AI 使用违规警报",
 ]
 
 TEXT_EXTENSIONS = {

@@ -30,6 +30,7 @@ Use this skill to operate the local workflow that creates a Xiaohongshu image-te
 5. Generate the six image cards with the mature image-card path used by the owner:
    use `baoyu-image-cards` to structure the series and Codex `imagegen` as the raster backend.
    Save each final PNG exactly to the `image_path` listed in `asset-generation/outputs/current-publish-assets.json`.
+   If the user has a different image model available, use that model only if it can save final PNGs to the same paths.
 6. After all six model-generated PNG files exist, run the wrapper. It must refresh assets, build the local package, build the Feishu card, and then validate or send:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --local-only`
 7. After a machine restart, check Feishu credentials without building or sending:
@@ -61,6 +62,7 @@ Use this skill to operate the local workflow that creates a Xiaohongshu image-te
 
 - For repository structure and every tracked file, read `PROJECT_GUIDE.md`.
 - For the content spec shape, read `references/content_spec.md`.
+- For the model-image handoff contract, read `references/image_generation.md`.
 - For a sanitized starter spec, copy from `assets/content_spec.example.json`.
 
 ## Validation
