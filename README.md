@@ -33,11 +33,10 @@ The GitHub repo gives other users the same workflow and image-prompt style. It d
 ```mermaid
 flowchart LR
   A["aihot selects AI topic"] --> B["agent-reach verifies facts"]
-  B --> C["content-strategy chooses content type"]
-  C --> D["hv-analysis-light creates insight pack"]
-  D --> E["dbs-xhs-title creates title candidates"]
-  E --> F["editor_prompt + write-xiaohongshu + humanizer-zh create body"]
-  F --> G["content_spec.json"]
+  B --> C["Model creates content type and insight pack"]
+  C --> D["dbs-xhs-title creates title candidates"]
+  D --> E["editor_prompt + model create body"]
+  E --> G["content_spec.json"]
   G --> H["Check sent history for duplicates"]
   H --> I["baoyu-image-cards creates image prompts"]
   I --> J["imagegen creates 6 PNG cards"]
@@ -51,12 +50,8 @@ flowchart LR
 
 - `aihot`: default source for AI-circle hot topics and news selection.
 - `agent-reach`: verification for source URLs, GitHub stars, repo activity, official announcements, X posts, and developer-platform facts.
-- `content-strategy`: classifies the post as project recommendation, product release, industry shift, or technical breakthrough.
-- `hv-analysis`: used only in lightweight mode to create the insight pack before body writing.
 - `dbs-xhs-title`: Xiaohongshu title formulas and candidates.
 - `references/editor_prompt.md`: owner's Xiaohongshu creator voice prompt for natural, non-template body copy.
-- `write-xiaohongshu`: final Xiaohongshu expression layer after the insight pack exists.
-- `humanizer-zh`: removes generic AI-sounding phrasing.
 - `baoyu-image-cards`: structures the 6-card Xiaohongshu image series.
 - `imagegen`: generates the final raster PNG cards.
 - `xhs-feishu-delivery`: packages the result and sends it to Feishu.
@@ -75,11 +70,7 @@ The image-generation handoff is documented in [references/image_generation.md](r
 - Supporting skills available in the Codex runtime:
   - `aihot`
   - `agent-reach`
-  - `content-strategy`
-  - `hv-analysis`
   - `dbs-xhs-title`
-  - `write-xiaohongshu`
-  - `humanizer-zh`
   - `baoyu-image-cards`
   - `imagegen`
 - A Feishu app or bot with credentials that can send messages/images to your target receiver.

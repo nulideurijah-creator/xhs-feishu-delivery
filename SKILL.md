@@ -38,17 +38,16 @@ Use this chain for a new post:
    - Use `agent-reach` for official sources, GitHub facts, repo activity, X posts, papers, or source URLs that materially affect the claim.
    - Do not rely on an `aihot` summary alone for concrete factual claims.
 3. **Content type and insight pack**:
-   - Use `content-strategy` to classify the post as one of:
+   - Classify the post directly as one of:
      `github_project_recommendation`, `ai_product_release`, `ai_industry_shift`, or `ai_technical_breakthrough`.
-   - Use `hv-analysis` in lightweight mode to produce an `insight_pack` before writing the body. Do not generate a PDF or long research report.
-   - The insight pack is the content brain. It must contain the hook, event, importance, takeaways, use cases, actionable framework, source facts, boundaries, and reader payoff.
+   - Write the `insight_pack` directly from the verified facts before writing the body. Do not invoke a separate analysis/report skill for this step.
+   - The insight pack is a short planning object, not a visible template. It must contain the hook, event, importance, takeaways, use cases, actionable framework, source facts, boundaries, and reader payoff.
 4. **Title candidates**: use `dbs-xhs-title` style rules for Xiaohongshu title formulas and candidates.
 5. **Body copy**:
    - Read `references/editor_prompt.md` before writing `body_full`.
    - Use the accepted voice target in `references/editor_prompt.md` as the style anchor.
-   - Use `write-xiaohongshu` only as the final Xiaohongshu expression layer after the insight pack exists.
-   - Apply `humanizer-zh` to remove generic AI-sounding phrasing.
-   - Do not let `write-xiaohongshu` invent the depth layer or replace the insight pack.
+   - Write `body_full` directly with the current model from the verified facts and insight pack.
+   - Do not invoke any separate copywriting rewrite skill. Extra copy layers can reintroduce template voice.
    - Before finalizing, privately rewrite once if the draft sounds like a tool-review template, checklist, product manual, or source recap.
    - The final body should sound like a real AI-tools Xiaohongshu creator sharing a useful discovery, not a report, listicle, product manual, or training handout.
 6. **Image-card structure and prompts**: use `baoyu-image-cards` with the bundled `xhs-warm-cute-open-source` preference.

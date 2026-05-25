@@ -6,12 +6,11 @@ Use this reference when editing the JSON file by hand. JSON does not support rea
 
 Before editing this file for a real post, follow the mature skill chain in
 `SKILL.md`: use `aihot` for AI-topic discovery unless the user already supplied
-a concrete topic/source, use `agent-reach` to verify material facts, use
-`content-strategy` to choose the content type, use `hv-analysis` in lightweight
-mode to create the insight pack, use `dbs-xhs-title` for title candidates, use
-read `references/editor_prompt.md`, use `write-xiaohongshu` plus
-`humanizer-zh` only for final expression, and use `baoyu-image-cards` plus
-`imagegen` for the final images.
+a concrete topic/source, use `agent-reach` to verify material facts, classify
+the content type directly, write a short insight pack from the verified facts,
+use `dbs-xhs-title` for title candidates, read `references/editor_prompt.md`
+before writing `body_full` directly with the current model, and use
+`baoyu-image-cards` plus `imagegen` for the final images.
 
 Before automatic topic selection, inspect sent history:
 

@@ -21,12 +21,8 @@ from typing import Any
 EXPECTED_MARKERS = [
     "aihot",
     "agent-reach",
-    "content-strategy",
-    "hv-analysis-light",
     "dbs-xhs-title",
     "editor_prompt",
-    "write-xiaohongshu",
-    "humanizer-zh",
     "baoyu-image-cards",
     "imagegen",
 ]

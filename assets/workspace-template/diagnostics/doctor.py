@@ -67,12 +67,8 @@ FEISHU_REQUIRED = [
 EXPECTED_SKILL_MARKERS = [
     "aihot",
     "agent-reach",
-    "content-strategy",
-    "hv-analysis-light",
     "dbs-xhs-title",
     "editor_prompt",
-    "write-xiaohongshu",
-    "humanizer-zh",
     "baoyu-image-cards",
     "imagegen",
 ]

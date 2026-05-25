@@ -400,10 +400,10 @@ def build_package(spec: dict[str, Any], history_check: dict[str, Any]) -> dict[s
         "skill_sources": {
             "topic": "aihot",
             "verification": "agent-reach for official sources, GitHub facts, X posts, papers, and source URLs",
-            "content_type": "content-strategy",
-            "insight_pack": "hv-analysis-light",
+            "content_type": "direct model classification",
+            "insight_pack": "direct model-written insight pack from verified facts",
             "title": "dbs-xhs-title style rules",
-            "copy": "references/editor_prompt.md + write-xiaohongshu expression layer + humanizer-zh editing rules",
+            "copy": "references/editor_prompt.md + direct model writing",
             "image_prompts": "baoyu-image-cards + Codex imagegen",
             "image_style": IMAGE_STYLE,
         },
