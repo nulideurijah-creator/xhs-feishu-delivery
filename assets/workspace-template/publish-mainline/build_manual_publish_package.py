@@ -7,11 +7,15 @@ plain Markdown/JSON package with title, body, tags, and image paths.
 from __future__ import annotations
 
 import json
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "asset-generation"))
+from copy_quality import validate_copy_quality  # noqa: E402
+
 OUT = ROOT / "publish-mainline" / "outputs"
 ASSET_PACKAGE = ROOT / "asset-generation" / "outputs" / "current-publish-assets.json"
 PACKAGE_JSON = OUT / "manual-publish-package.json"
@@ -55,6 +59,9 @@ def validate_assets(package: dict[str, Any]) -> tuple[list[str], list[dict[str, 
         errors.append("tags_missing")
     if not isinstance(images, list) or len(images) != 6:
         errors.append("expected_6_images")
+    copy_quality = validate_copy_quality(package)
+    if copy_quality["status"] != "pass":
+        errors.append("copy_quality_failed")
 
     normalized_images: list[dict[str, Any]] = []
     if isinstance(images, list):
@@ -133,6 +140,7 @@ def build_package() -> dict[str, Any]:
         "body_char_count": len(str(package.get("body_full", "")).strip()),
         "tags": tags,
         "images": images,
+        "copy_quality": validate_copy_quality(package),
         "source_urls": package.get("source_urls", []),
         "source_verification": package.get("source_verification", {}),
         "created_at": now(),

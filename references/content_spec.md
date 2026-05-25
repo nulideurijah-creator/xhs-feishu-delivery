@@ -14,6 +14,12 @@ Before generating assets for the current spec, check duplicate history:
 
 `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-history`
 
+Before generating image prompts or final PNGs, check copy quality:
+
+`python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-copy`
+
+If the command reports `copy_blocked`, rewrite `title`, `body_full`, and `tags` from the verified facts. Do not continue to image generation, local-only validation, or Feishu sending.
+
 For a new workspace, initialize the bundled template first:
 
 `python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`
@@ -57,6 +63,8 @@ Each `pages` item must include:
 - `layout`: optional per-card baoyu layout override such as `flow`, `comparison`, `list`, or `balanced`.
 
 Use `references/creator_prompt.md` before writing `body_full`. The body should feel like a real Xiaohongshu AI-tools creator sharing a useful discovery with a point of view.
+
+Use `references/copy_quality_gate.md` as the hard local standard for title hook and creator-style body quality. The local workflow will block documentation-style titles, AI-tool-manual bodies, fixed checklist language, and phrases such as "它干的事很简单", "它的好处是", "我会把它收藏给三类人", "如果你是", and "总结一下".
 
 For GitHub stars, open-source projects, or repo-based topics, fill `project_facts` before generating prompts. The cover prompt will then ask the image model to show the project card, star count, and open-source/license badge on the first image instead of hiding those facts in later cards.
 

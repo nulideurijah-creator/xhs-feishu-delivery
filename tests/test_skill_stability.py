@@ -39,7 +39,7 @@ def write_smoke_spec(workspace: Path) -> dict:
     spec = {
         "review_id": "publish-smoke-test",
         "content_id": "smoke-ai-tool-evaluation",
-        "title": "Smoke Test",
+        "title": "这个工具有点顺",
         "topic": "Smoke test topic",
         "summary": "Smoke test fixture for packaging.",
         "hot_source": "smoke-test",
@@ -59,13 +59,20 @@ def write_smoke_spec(workspace: Path) -> dict:
             "do_not_say": ["Do not use formula-title language."],
         },
         "project_facts": {},
-        "body_full": "SMOKE TEST BODY. Fixture only. Do not use as Xiaohongshu copywriting guidance.",
-        "tags": ["smoke", "test", "fixture"],
+        "body_full": (
+            "我最近在做一个自动化 demo，翻到这个工具的文档时停了一下：它不是让我把流程全写死，"
+            "而是先把目标和素材交进去，再生成一份可检查的发布包。\n\n"
+            "我挺喜欢这种位置。做内容工作最烦的是前面聊得很热闹，到了交付又靠人手补图、补标签、补检查，"
+            "一不小心就漏。这个 smoke fixture 只是测试用，但它模拟的是同一条链路：有事实、有正文、有 6 张图的路径，"
+            "最后还能进本地校验。\n\n"
+            "别指望它替代真实选题判断，至少测试里能把最容易跑飞的环节拦住，这对维护 skill 比只看文档舒服。"
+        ),
+        "tags": ["AI工具", "自动化", "小红书运营", "工作流", "内容交付", "Feishu"],
         "image_slug": "smoke-test",
         "pages": [
             {
                 "page_id": "01-cover",
-                "title": "Smoke Test",
+                "title": "这个工具有点顺",
                 "subtitle": "先看能不能进流程",
                 "visual": "A creator comparing a shiny demo screen with a real work desk.",
             },
@@ -91,11 +98,13 @@ class SkillStabilityTests(unittest.TestCase):
             "agent-reach",
             "writing_brief",
             "references/creator_prompt.md",
+            "references/copy_quality_gate.md",
             "baoyu-image-cards",
             "imagegen",
             "Do not invent a hot topic",
             "sent history",
             "--check-history",
+            "--check-copy",
             "content-history/sent-posts.jsonl",
             "Do not ask the user to choose image watermark",
             "--yes",
@@ -110,16 +119,32 @@ class SkillStabilityTests(unittest.TestCase):
         self.assertFalse((ROOT / "references" / ("editor" + "_prompt.md")).exists())
         text = prompt_path.read_text(encoding="utf-8")
         for marker in [
-            "像一个真的小红书 AI 博主",
-            "标题和正文都直接生成最终稿",
-            "不要先套公式",
-            "不要写成三点清单",
-            "读完要有具体收获",
-            "如果读起来像 AI 在解释，请重写",
+            "Do not try to \"fully explain the tool.\"",
+            "The body must not read like an AI tool manual",
+            "A real usage or discovery scene",
+            "Some personal judgment",
+            "A little natural complaint",
+            "Useful facts hidden inside the story and judgment",
+            "Never write",
+            "它干的事很简单",
         ]:
             self.assertIn(marker, text)
         for term in legacy_terms():
             self.assertNotIn(term, text)
+
+    def test_copy_quality_gate_is_documented_as_hard_gate(self) -> None:
+        gate_path = ROOT / "references" / "copy_quality_gate.md"
+        self.assertTrue(gate_path.exists())
+        text = gate_path.read_text(encoding="utf-8")
+        for marker in [
+            "deterministic local hard gate",
+            "AI tool manual",
+            "title has a Xiaohongshu hook",
+            "first-person discovery scene",
+            "natural complaint or friction",
+            "python .\\run_xhs_delivery.py --check-copy",
+        ]:
+            self.assertIn(marker, text)
 
     def test_image_generation_contract_uses_noninteractive_baoyu_defaults(self) -> None:
         text = (ROOT / "references" / "image_generation.md").read_text(encoding="utf-8")
@@ -400,6 +425,7 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertEqual(run([sys.executable, str(workspace / "feishu-delivery" / "build_delivery_card.py")], cwd=workspace).returncode, 0)
 
             module_path = workspace / "feishu-delivery" / "send_delivery_card.py"
+            sys.modules.pop("history_utils", None)
             spec = importlib.util.spec_from_file_location("workspace_send_delivery_card", module_path)
             self.assertIsNotNone(spec)
             self.assertIsNotNone(spec.loader)

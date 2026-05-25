@@ -16,6 +16,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "content-history"))
 from history_utils import assert_not_duplicate  # noqa: E402
+from copy_quality import assert_copy_quality, validate_copy_quality  # noqa: E402
 
 SPEC_PATH = ROOT / "asset-generation" / "content_spec.json"
 OUT = ROOT / "asset-generation" / "outputs"
@@ -106,6 +107,7 @@ def validate_spec(spec: dict[str, Any]) -> None:
     hits = [phrase for phrase in FORBIDDEN_PHRASES if phrase in body]
     if hits:
         raise ValueError(f"body contains forbidden phrases: {hits}")
+    assert_copy_quality(spec)
 
 
 def validate_writing_brief(brief: Any) -> None:
@@ -314,6 +316,7 @@ def build_package(spec: dict[str, Any], history_check: dict[str, Any]) -> dict[s
         "body_full": spec["body_full"],
         "body_char_count": len(spec["body_full"]),
         "tags": [str(tag).strip().lstrip("#") for tag in spec["tags"]],
+        "copy_quality": validate_copy_quality(spec),
         "image_slug": spec["image_slug"],
         "images": images,
         "publish_mode": "manual_only",

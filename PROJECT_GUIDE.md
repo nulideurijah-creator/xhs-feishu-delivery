@@ -19,6 +19,7 @@ This guide explains every tracked file in the repository so a new user can under
 | `agents/openai.yaml` | Display metadata used by Codex UI: name, short description, and default prompt. |
 | `references/content_spec.md` | Field-by-field reference for the current post spec, including `writing_brief`, final title/body/tags, image pages, and source verification. |
 | `references/creator_prompt.md` | Owner-approved model-writing prompt for direct Xiaohongshu title/body/tag generation. |
+| `references/copy_quality_gate.md` | Hard delivery gate that defines the required human-creator tone, blocked phrases, hook-title rule, and `--check-copy` command. |
 | `references/image_generation.md` | Contract for generating the 6 final PNG cards with `baoyu-image-cards`, Codex `imagegen`, or the user's equivalent image model. |
 
 ## Skill Scripts
@@ -41,6 +42,7 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | `assets/workspace-template/requirements.txt` | Python dependency list for the generated workspace. It is intentionally empty by default because final cards are model-generated, not drawn locally. |
 | `assets/workspace-template/run_xhs_delivery.py` | Workspace-local packaging and Feishu runner. It mirrors the skill wrapper but does not require `--workspace`. |
 | `assets/workspace-template/automation-lock/automation_lock.py` | Whole-workflow lock for unattended Codex automations. |
+| `assets/workspace-template/asset-generation/copy_quality.py` | Deterministic validator for title/body/tags that blocks report-like, manual-like, and checklist-like Xiaohongshu copy. |
 | `assets/workspace-template/asset-generation/generate_current_assets.py` | Validates the spec, writes copy and prompt outputs, and prepares image paths for model-generated cards. |
 | `assets/workspace-template/content-history/check_history.py` | Lists sent post history and checks the current spec against previous Feishu deliveries. |
 | `assets/workspace-template/content-history/history_utils.py` | Shared duplicate-key normalization, history read/write, and sent-record helpers. |
@@ -65,6 +67,7 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | File | Purpose |
 |---|---|
 | `tests/test_skill_stability.py` | Regression tests for clean model-writing rules, workspace initialization, doctor diagnostics, prompt metadata, history dedupe, Feishu card building, and safety scanning. |
+| `tests/test_copy_quality.py` | Regression tests for the local copy gate and its integration with asset generation. |
 
 ## What Users Usually Edit
 
