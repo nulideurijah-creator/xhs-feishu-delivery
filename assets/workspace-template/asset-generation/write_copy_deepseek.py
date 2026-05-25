@@ -24,6 +24,7 @@ MAX_ATTEMPTS = 4
 FORBIDDEN_COPY_FRAGMENTS = [
     "性感",
     "该项目",
+    "本项目",
     "本工具",
     "据悉",
     "据了解",
@@ -31,6 +32,7 @@ FORBIDDEN_COPY_FRAGMENTS = [
     "由此可见",
     "总体而言",
     "总体来说",
+    "颇具优势",
     "首先",
     "其次",
     "最后",

@@ -111,12 +111,13 @@ class SkillStabilityTests(unittest.TestCase):
         self.assertFalse((ROOT / "references" / ("editor" + "_prompt.md")).exists())
         text = prompt_path.read_text(encoding="utf-8")
         for marker in [
-            "小红书 AI 编程领域真人博主",
+            "小红书垂直领域爆款博主",
+            "GitHub 开源生态",
             "`writing_brief`",
             "只用这份提示词生成最终",
-            "Coding Agent",
-            "圈内工具避坑内容",
-            "接地气，偏干货提醒风",
+            "AI 圈内热点资讯",
+            "GitHub 高星开源项目",
+            "轻松唠嗑风",
             "用词禁令",
             "Final output must be publishable title, body, and tags only.",
         ]:
@@ -296,7 +297,7 @@ class SkillStabilityTests(unittest.TestCase):
             module.normalize_copy(
                 {
                     "title": "这个工具挺顺",
-                    "body_full": "首先，这个更新值得看。总体来说，它很适合开发者。",
+                    "body_full": "首先，本项目颇具优势。总体来说，它很适合开发者。",
                     "tags": ["AI工具", "开发工具", "Agent", "开源项目", "效率工具"],
                 }
             )
