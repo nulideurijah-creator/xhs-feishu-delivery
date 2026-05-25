@@ -371,6 +371,11 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertFalse(any("github cli" in key for key in source_keys))
             self.assertIn("github.com/tauricresearch/tradingagents", source_keys)
 
+    def test_preflight_uses_cross_platform_script_path(self) -> None:
+        text = (ROOT / "assets" / "workspace-template" / "publish-mainline" / "preflight.py").read_text(encoding="utf-8")
+        self.assertIn("sys.executable", text)
+        self.assertNotIn(".\\publish-mainline\\build_manual_publish_package.py", text)
+
     def test_send_records_successful_delivery_in_history(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp) / "workspace"

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -89,7 +90,7 @@ def main() -> int:
     steps = [
         run_step(
             "build_manual_publish_package",
-            ["python", ".\\publish-mainline\\build_manual_publish_package.py"],
+            [sys.executable, str(ROOT / "publish-mainline" / "build_manual_publish_package.py")],
         )
     ]
     package = load_json(MANUAL_PACKAGE_JSON)
