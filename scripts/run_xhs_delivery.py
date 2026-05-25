@@ -37,6 +37,10 @@ STARTUP_REQUIRED_FILES = [
     "feishu-delivery/install_startup_check.py",
 ]
 
+AUTOMATION_LOCK_REQUIRED_FILES = [
+    "automation-lock/automation_lock.py",
+]
+
 DOCTOR_REQUIRED_FILES = [
     # Read-only workspace diagnostics.
     "diagnostics/doctor.py",
@@ -123,6 +127,9 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--install-startup-check", action="store_true", help="Install a Windows logon Feishu health check")
     mode.add_argument("--install-system-startup-check", action="store_true", help="Install a Windows startup health check; requires administrator")
     mode.add_argument("--uninstall-startup-check", action="store_true", help="Remove the Windows logon Feishu health check")
+    mode.add_argument("--automation-lock-status", action="store_true", help="Show the workspace automation lock status")
+    mode.add_argument("--acquire-automation-lock", action="store_true", help="Acquire the workspace automation lock")
+    mode.add_argument("--release-automation-lock", action="store_true", help="Release the workspace automation lock")
     mode.add_argument("--local-only", action="store_true", help="Build and validate without Feishu credentials")
     mode.add_argument("--dry-run", action="store_true", help="Build and validate Feishu credentials")
     mode.add_argument("--send", action="store_true", help="Build and send the Feishu delivery card")
@@ -167,6 +174,18 @@ def main(argv: list[str]) -> int:
     if args.uninstall_startup_check:
         require_files(workspace, STARTUP_REQUIRED_FILES)
         run_step(workspace, "uninstall_startup_check", [sys.executable, ".\\feishu-delivery\\install_startup_check.py", "--uninstall"])
+        return 0
+    if args.automation_lock_status:
+        require_files(workspace, AUTOMATION_LOCK_REQUIRED_FILES)
+        run_step(workspace, "automation_lock_status", [sys.executable, ".\\automation-lock\\automation_lock.py", "--status"])
+        return 0
+    if args.acquire_automation_lock:
+        require_files(workspace, AUTOMATION_LOCK_REQUIRED_FILES)
+        run_step(workspace, "acquire_automation_lock", [sys.executable, ".\\automation-lock\\automation_lock.py", "--acquire"])
+        return 0
+    if args.release_automation_lock:
+        require_files(workspace, AUTOMATION_LOCK_REQUIRED_FILES)
+        run_step(workspace, "release_automation_lock", [sys.executable, ".\\automation-lock\\automation_lock.py", "--release"])
         return 0
 
     require_files(workspace, BUILD_REQUIRED_FILES + HISTORY_REQUIRED_FILES)

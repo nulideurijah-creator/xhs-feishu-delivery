@@ -35,6 +35,7 @@ REQUIRED_FILES = [
     "feishu-delivery/send_delivery_card.py",
     "feishu-delivery/check_feishu_ready.py",
     ".baoyu-skills/baoyu-image-cards/EXTEND.md",
+    "automation-lock/automation_lock.py",
 ]
 
 CONTENT_REQUIRED = [

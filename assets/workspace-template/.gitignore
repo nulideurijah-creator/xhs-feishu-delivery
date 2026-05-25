@@ -6,3 +6,4 @@ content-history/sent-posts.jsonl
 **/outputs/
 **/__pycache__/
 .xhs_delivery.lock
+.xhs_automation.lock

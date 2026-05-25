@@ -5,6 +5,7 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+.xhs_automation.lock
 .DS_Store
 Thumbs.db
 outputs/

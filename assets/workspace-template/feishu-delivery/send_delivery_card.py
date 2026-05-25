@@ -13,6 +13,7 @@ import argparse
 import json
 import os
 import sys
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -47,6 +48,8 @@ REQUIRED_ENV = [
 ]
 ALLOWED_RECEIVE_ID_TYPES = {"chat_id", "open_id", "user_id", "union_id", "email"}
 CARD_FORBIDDEN_TERMS = ["发布方式", "人工发布包", "发布前检查", "**状态**"]
+DEFAULT_NETWORK_ATTEMPTS = 6
+DEFAULT_NETWORK_RETRY_SECONDS = 30
 
 
 def now() -> str:
@@ -128,6 +131,47 @@ def validate_card(card: dict[str, Any]) -> None:
         raise ValueError(f"delivery card contains forbidden terms: {hits}")
 
 
+def retry_settings() -> tuple[int, int]:
+    """Read retry settings from env while keeping conservative defaults."""
+    attempts = int(os.environ.get("FEISHU_NETWORK_ATTEMPTS", DEFAULT_NETWORK_ATTEMPTS))
+    retry_seconds = int(os.environ.get("FEISHU_NETWORK_RETRY_SECONDS", DEFAULT_NETWORK_RETRY_SECONDS))
+    return max(1, attempts), max(0, retry_seconds)
+
+
+def is_retryable_network_error(exc: BaseException) -> bool:
+    """Treat socket permission/timeout/reset errors as retryable in automations."""
+    if isinstance(exc, error.URLError):
+        reason = exc.reason
+        return is_retryable_network_error(reason) if isinstance(reason, BaseException) else True
+    if isinstance(exc, (TimeoutError, ConnectionError, OSError)):
+        return True
+    return False
+
+
+def urlopen_with_retry(req: request.Request, timeout: int, action: str) -> str:
+    """Open a request with retry for transient Windows/Codex network blocks."""
+    attempts, retry_seconds = retry_settings()
+    last_error: BaseException | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            with request.urlopen(req, timeout=timeout) as response:
+                return response.read().decode("utf-8")
+        except error.HTTPError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - CLI should retry and report concise network failures.
+            last_error = exc
+            if attempt >= attempts or not is_retryable_network_error(exc):
+                break
+            print(
+                f"network_retry: {action} attempt {attempt}/{attempts} failed: {exc}; "
+                f"retrying in {retry_seconds}s",
+                file=sys.stderr,
+            )
+            if retry_seconds:
+                time.sleep(retry_seconds)
+    raise RuntimeError(f"{action} failed after {attempts} attempts: {last_error}") from last_error
+
+
 def validate_images(delivery: dict[str, Any]) -> list[Path]:
     """Resolve and validate all 6 local PNG files before any Feishu send."""
     images = delivery.get("images")
@@ -160,8 +204,7 @@ def http_json(
         headers={"Content-Type": "application/json; charset=utf-8", **(headers or {})},
     )
     try:
-        with request.urlopen(req, timeout=30) as response:
-            raw = response.read().decode("utf-8")
+        raw = urlopen_with_retry(req, timeout=30, action=url)
     except error.HTTPError as exc:
         raw = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"HTTP {exc.code}: {raw}") from exc
@@ -221,8 +264,7 @@ def upload_image(token: str, image_path: Path) -> str:
         },
     )
     try:
-        with request.urlopen(req, timeout=60) as response:
-            raw = response.read().decode("utf-8")
+        raw = urlopen_with_retry(req, timeout=60, action=f"upload_image:{image_path.name}")
     except error.HTTPError as exc:
         raw = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"image upload failed HTTP {exc.code}: {raw}") from exc

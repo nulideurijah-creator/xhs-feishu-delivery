@@ -72,13 +72,17 @@ local image renderer, treat that instruction as obsolete.
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`
 2. The target workspace must contain the four workflow directories:
    `asset-generation`, `image-generation`, `publish-mainline`, and `feishu-delivery`.
-3. Create `asset-generation/content_spec.json` from the current topic using the Required Mature Skill Chain above. The template intentionally does not ship a starter post, so do not reuse old workspace output or old examples as copy. The file must contain the current topic, `content_type`, `insight_pack`, title, body, tags, image slug, source verification, and exactly 6 image page definitions.
-4. Check the current spec against sent history before image work:
+3. For unattended Codex automations, acquire the whole-workflow lock before editing any workspace file:
+   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --acquire-automation-lock`
+   If the lock is busy, stop and report the active owner instead of continuing. Release it after successful send or a terminal blocker:
+   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --release-automation-lock`
+4. Create `asset-generation/content_spec.json` from the current topic using the Required Mature Skill Chain above. The template intentionally does not ship a starter post, so do not reuse old workspace output or old examples as copy. The file must contain the current topic, `content_type`, `insight_pack`, title, body, tags, image slug, source verification, and exactly 6 image page definitions.
+5. Check the current spec against sent history before image work:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-history`
    If it reports `duplicate`, choose a new topic/angle/source. Only set `history.allow_repeat: true` when the user explicitly asks to repeat a topic.
-5. Run the asset generator first. It writes the copy package and the six prompt files:
+6. Run the asset generator first. It writes the copy package and the six prompt files:
    `python "<workspace>\\asset-generation\\generate_current_assets.py"`
-6. Generate the six image cards with the mature image-card path used by the owner:
+7. Generate the six image cards with the mature image-card path used by the owner:
    use `baoyu-image-cards` to structure the series and Codex `imagegen` as the raster backend.
    If those skills/tools are available in the current runtime, explicitly use them; do not replace them with shell, Python, browser, or canvas code.
    Invoke `baoyu-image-cards` with the workspace `.baoyu-skills/baoyu-image-cards/EXTEND.md` defaults and `--yes` / equivalent direct-default confirmation. Do not pause to ask about watermark text, style, layout, palette, backend, or preference save location.
@@ -86,20 +90,20 @@ local image renderer, treat that instruction as obsolete.
    If the user has a different image model available, use that model only if it can save final PNGs to the same paths.
    If a real image model/backend is not available, stop and report that image generation is blocked. Do not create a Python, PIL, SVG, HTML, canvas, screenshot, browser, or placeholder renderer to work around it.
    If generated images are saved outside the workspace by the image tool, copy the selected final PNGs into the required `image_path` locations before packaging.
-7. After all six model-generated PNG files exist, run the wrapper. It must refresh the asset package, build the local package, build the Feishu card, and then validate or send:
+8. After all six model-generated PNG files exist, run the wrapper. It must refresh the asset package, build the local package, build the Feishu card, and then validate or send:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --local-only`
-8. After a machine restart, check Feishu credentials without building or sending:
+9. After a machine restart, check Feishu credentials without building or sending:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-feishu`
-9. Before using the workflow from a new Codex window, run read-only diagnostics:
+10. Before using the workflow from a new Codex window, run read-only diagnostics:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --doctor`
-10. Install a Windows logon health check when the workflow should recover after reboot:
+11. Install a Windows logon health check when the workflow should recover after reboot:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-startup-check`
    If Task Scheduler or the Startup folder is blocked by local permissions, the workspace installer may fall back to the current user's Windows Run registry entry.
    For "machine booted but no user has logged in", install the administrator-only SYSTEM startup task:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-system-startup-check`
-11. If Feishu credentials should be checked after building the package:
+12. If Feishu credentials should be checked after building the package:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --dry-run`
-12. Only when the user explicitly wants delivery to Feishu:
+13. Only when the user explicitly wants delivery to Feishu:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --send`
    A successful send must append or update `content-history/sent-posts.jsonl` with the sent title, topic, source keys, Feishu `message_id`, and send time.
 

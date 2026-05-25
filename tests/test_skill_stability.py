@@ -136,10 +136,25 @@ class SkillStabilityTests(unittest.TestCase):
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
             self.assertTrue((workspace / "diagnostics" / "doctor.py").exists())
+            self.assertTrue((workspace / "automation-lock" / "automation_lock.py").exists())
             self.assertFalse((workspace / "asset-generation" / "content_spec.json").exists())
             config = workspace / ".baoyu-skills" / "baoyu-image-cards" / "EXTEND.md"
             self.assertTrue(config.exists())
             self.assertIn("xhs-warm-cute-open-source", config.read_text(encoding="utf-8"))
+
+    def test_automation_lock_blocks_second_owner(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp) / "workspace"
+            init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
+            self.assertEqual(init.returncode, 0, init.stderr)
+            lock_script = workspace / "automation-lock" / "automation_lock.py"
+            first = run([sys.executable, str(lock_script), "--acquire", "--owner", "first"], cwd=workspace)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            second = run([sys.executable, str(lock_script), "--acquire", "--owner", "second"], cwd=workspace)
+            self.assertEqual(second.returncode, 2)
+            self.assertIn('"status": "busy"', second.stdout)
+            release = run([sys.executable, str(lock_script), "--release", "--owner", "first"], cwd=workspace)
+            self.assertEqual(release.returncode, 0, release.stderr)
 
     def test_generate_assets_records_chain_and_cover_prompt(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

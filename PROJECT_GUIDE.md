@@ -40,6 +40,7 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | `assets/workspace-template/.baoyu-skills/baoyu-image-cards/EXTEND.md` | Bundled `baoyu-image-cards` preference file. It disables watermarks, pins Codex image generation, and defines the `xhs-warm-cute-open-source` style for warm cute cards with visible GitHub/open-source facts on repo-based covers. |
 | `assets/workspace-template/requirements.txt` | Python dependency list for the generated workspace. It is intentionally empty by default because final cards are model-generated, not drawn locally. |
 | `assets/workspace-template/run_xhs_delivery.py` | Workspace-local packaging and Feishu runner. It mirrors the skill wrapper but does not require `--workspace`. |
+| `assets/workspace-template/automation-lock/automation_lock.py` | Whole-workflow lock for unattended Codex automations. It prevents two scheduled runs from editing the same workspace before the packaging runner starts. |
 | `assets/workspace-template/asset-generation/generate_current_assets.py` | Validates the spec, writes copy/title/prompt outputs, and prepares image paths for model-generated cards. |
 | `assets/workspace-template/content-history/check_history.py` | Lists sent post history and checks the current spec against previous Feishu deliveries. |
 | `assets/workspace-template/content-history/history_utils.py` | Shared duplicate-key normalization, history read/write, and sent-record helpers. |

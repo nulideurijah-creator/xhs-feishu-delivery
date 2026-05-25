@@ -14,6 +14,7 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, or browser
 - A model-first image step: final image cards should come from `baoyu-image-cards`/Codex `imagegen`, using the bundled `xhs-warm-cute-open-source` style for warm cute Xiaohongshu covers that still expose GitHub/open-source facts clearly.
 - A workspace-local sent history file that records successful Feishu deliveries and blocks repeated topics before the next asset generation.
 - Feishu health checks that can run after Windows logon.
+- A workspace automation lock that prevents two Codex automations from editing the same post package at the same time.
 - Safety checks that prevent accidental Xiaohongshu automation or secret leakage.
 
 ## Mental Model
@@ -303,6 +304,15 @@ Run a local doctor before using the workflow from a new Codex window:
 
 ```powershell
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --doctor
+```
+
+For unattended Codex automations, acquire the whole-workflow lock before writing
+`content_spec.json` or generating images, and release it after send or a
+terminal blocker:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --acquire-automation-lock
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --release-automation-lock
 ```
 
 Send the complete package to Feishu:
