@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import importlib.util
@@ -23,6 +23,56 @@ def run(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess
         capture_output=True,
         check=False,
     )
+
+
+def write_smoke_spec(workspace: Path) -> dict:
+    spec = {
+        "review_id": "publish-smoke-test",
+        "content_id": "smoke-ai-tool-evaluation",
+        "title": "Smoke Test",
+        "topic": "Smoke test topic",
+        "content_type": "ai_product_release",
+        "summary": "Smoke test fixture for packaging.",
+        "hot_source": "smoke-test",
+        "source_urls": ["https://example.com/ai-tool", "https://example.com/ai-tool-docs"],
+        "source_verification": {"source": "smoke test fixture", "checked_at": "2026-05-25T00:00:00+08:00"},
+        "insight_pack": {
+            "core_hook": "Smoke hook for packaging.",
+            "one_sentence_event": "Smoke event for packaging.",
+            "why_it_matters": "Smoke reason for packaging.",
+            "key_takeaways": ["Smoke takeaway one", "Smoke takeaway two", "Smoke takeaway three"],
+            "use_cases": ["Smoke use case one", "Smoke use case two"],
+            "actionable_framework": {
+                "name": "Smoke framework",
+                "items": ["Smoke item one", "Smoke item two"],
+            },
+            "source_facts": [
+                {"claim": "Smoke fact one.", "source_url": "https://example.com/ai-tool"},
+                {"claim": "Smoke fact two.", "source_url": "https://example.com/ai-tool-docs"},
+            ],
+            "boundaries": ["Smoke boundary one", "Smoke boundary two"],
+            "reader_payoff": "Smoke payoff for packaging.",
+        },
+        "project_facts": {},
+        "title_candidates": [
+            {"title": "Smoke Test", "type": "反差", "reason": "强调演示和真实使用之间的落差"}
+        ],
+        "body_full": "SMOKE TEST BODY. Fixture only. Do not use as Xiaohongshu copywriting guidance.",
+        "tags": ["smoke", "test", "fixture"],
+        "image_slug": "smoke-test",
+        "pages": [
+            {"page_id": "01-cover", "title": "Smoke Test", "subtitle": "先看能不能进流程", "visual": "A creator comparing a shiny demo screen with a real work desk."},
+            {"page_id": "02-gap", "title": "Smoke Page 2", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
+            {"page_id": "03-task", "title": "Smoke Page 3", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
+            {"page_id": "04-output", "title": "Smoke Page 4", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
+            {"page_id": "05-rework", "title": "Smoke Page 5", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
+            {"page_id": "06-save", "title": "Smoke Page 6", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
+        ],
+    }
+    path = workspace / "asset-generation" / "content_spec.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return spec
 
 
 class SkillStabilityTests(unittest.TestCase):
@@ -75,6 +125,7 @@ class SkillStabilityTests(unittest.TestCase):
             )
             self.assertEqual(completed.returncode, 0, completed.stderr)
             self.assertTrue((workspace / "diagnostics" / "doctor.py").exists())
+            self.assertFalse((workspace / "asset-generation" / "content_spec.json").exists())
             config = workspace / ".baoyu-skills" / "baoyu-image-cards" / "EXTEND.md"
             self.assertTrue(config.exists())
             self.assertIn("xhs-warm-cute-open-source", config.read_text(encoding="utf-8"))
@@ -85,7 +136,7 @@ class SkillStabilityTests(unittest.TestCase):
             init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
             self.assertEqual(init.returncode, 0, init.stderr)
             spec_path = workspace / "asset-generation" / "content_spec.json"
-            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec = write_smoke_spec(workspace)
             spec["project_facts"] = {
                 "name": "models.dev",
                 "repo": "github.com/vercel/ai",
@@ -120,7 +171,7 @@ class SkillStabilityTests(unittest.TestCase):
                 workspace
                 / "image-generation"
                 / "prompts"
-                / "starter-ai-tool-evaluation"
+                / "smoke-test"
                 / "01-cover.md"
             ).read_text(encoding="utf-8")
             self.assertIn("style: xhs-warm-cute-open-source", prompt)
@@ -143,7 +194,7 @@ class SkillStabilityTests(unittest.TestCase):
             init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
             self.assertEqual(init.returncode, 0, init.stderr)
             spec_path = workspace / "asset-generation" / "content_spec.json"
-            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec = write_smoke_spec(workspace)
             spec.pop("insight_pack", None)
             spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -157,7 +208,7 @@ class SkillStabilityTests(unittest.TestCase):
             init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
             self.assertEqual(init.returncode, 0, init.stderr)
             spec_path = workspace / "asset-generation" / "content_spec.json"
-            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec = write_smoke_spec(workspace)
             spec["insight_pack"]["source_facts"] = [
                 {"claim": "只有一条来源事实。", "source_url": "https://example.com/source"}
             ]
@@ -173,7 +224,7 @@ class SkillStabilityTests(unittest.TestCase):
             init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
             self.assertEqual(init.returncode, 0, init.stderr)
             spec_path = workspace / "asset-generation" / "content_spec.json"
-            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec = write_smoke_spec(workspace)
             spec["body_full"] = "它最适合三类人。这个工具值得关注。我会把它放在三个场景里用。总结一下，AI 工具要看长期价值。"
             spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -209,7 +260,7 @@ class SkillStabilityTests(unittest.TestCase):
             )
 
             spec_path = workspace / "asset-generation" / "content_spec.json"
-            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec = write_smoke_spec(workspace)
             spec["content_type"] = "github_project_recommendation"
             spec["topic"] = "TradingAgents 开源项目"
             spec["project_facts"] = {
@@ -267,6 +318,7 @@ class SkillStabilityTests(unittest.TestCase):
             workspace = Path(temp) / "workspace"
             init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
             self.assertEqual(init.returncode, 0, init.stderr)
+            write_smoke_spec(workspace)
             generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
             self.assertEqual(generated.returncode, 0, generated.stderr)
             package_path = workspace / "asset-generation" / "outputs" / "current-publish-assets.json"
@@ -322,6 +374,7 @@ class SkillStabilityTests(unittest.TestCase):
             workspace = Path(temp) / "workspace"
             init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
             self.assertEqual(init.returncode, 0, init.stderr)
+            write_smoke_spec(workspace)
             generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
             self.assertEqual(generated.returncode, 0, generated.stderr)
 
@@ -353,3 +406,4 @@ class SkillStabilityTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

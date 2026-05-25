@@ -30,12 +30,6 @@ This guide explains every tracked file in the repository so a new user can under
 | `scripts/validate_skill_safety.py` | Scans the skill folder to make sure secrets and Xiaohongshu auto-publish artifacts are not present. |
 | `scripts/smoke_test_skill.py` | Creates a temporary workspace and verifies the installed skill can initialize, generate asset metadata, and preserve the mature skill chain. |
 
-## Example Assets
-
-| File | Purpose |
-|---|---|
-| `assets/content_spec.example.json` | Small standalone example of the post schema. Useful for understanding required fields, especially the required insight pack for stronger copy. |
-
 ## Workspace Template
 
 These files are copied into a user workspace by `--init-workspace`. The copied workspace is what actually generates posts and sends Feishu cards.
@@ -46,7 +40,6 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | `assets/workspace-template/.baoyu-skills/baoyu-image-cards/EXTEND.md` | Bundled `baoyu-image-cards` preference file. It disables watermarks, pins Codex image generation, and defines the `xhs-warm-cute-open-source` style for warm cute cards with visible GitHub/open-source facts on repo-based covers. |
 | `assets/workspace-template/requirements.txt` | Python dependency list for the generated workspace. It is intentionally empty by default because final cards are model-generated, not drawn locally. |
 | `assets/workspace-template/run_xhs_delivery.py` | Workspace-local packaging and Feishu runner. It mirrors the skill wrapper but does not require `--workspace`. |
-| `assets/workspace-template/asset-generation/content_spec.json` | Editable post specification. Users change this file to create a new post, including the content type, insight pack, source facts, body, tags, and 6 card prompts. |
 | `assets/workspace-template/asset-generation/generate_current_assets.py` | Validates the spec, writes copy/title/prompt outputs, and prepares image paths for model-generated cards. |
 | `assets/workspace-template/content-history/check_history.py` | Lists sent post history and checks the current spec against previous Feishu deliveries. |
 | `assets/workspace-template/content-history/history_utils.py` | Shared duplicate-key normalization, history read/write, and sent-record helpers. |
@@ -64,7 +57,7 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 
 | File | Purpose |
 |---|---|
-| `.github/workflows/validate.yml` | GitHub Actions workflow that compiles scripts, validates JSON examples, runs the safety scan, runs unit tests, and runs the smoke test on every push and pull request. |
+| `.github/workflows/validate.yml` | GitHub Actions workflow that compiles scripts, runs the safety scan, runs unit tests, and runs the smoke test on every push and pull request. |
 
 ## Tests
 
@@ -74,7 +67,7 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 
 ## What Users Usually Edit
 
-- `asset-generation/content_spec.json` in their generated workspace.
+- `asset-generation/content_spec.json` in their generated workspace. Codex creates this file for each real post from the current topic and mature skill chain.
 - `feishu-delivery/.env` in their generated workspace.
 - `content-history/sent-posts.jsonl` is generated automatically after successful sends; users normally inspect it but do not hand-edit it.
 

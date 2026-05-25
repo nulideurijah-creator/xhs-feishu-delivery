@@ -15,9 +15,6 @@ jobs:
           python-version: "3.12"
       - name: Compile scripts
         run: python -m compileall -q scripts assets/workspace-template
-      - name: Validate JSON examples
-        run: |
-          python -c "import json, pathlib; [json.loads(pathlib.Path(p).read_text(encoding='utf-8-sig')) for p in ['assets/content_spec.example.json','assets/workspace-template/asset-generation/content_spec.json']]"
       - name: Safety scan
         run: python scripts/validate_skill_safety.py --skill-dir .
       - name: Unit tests

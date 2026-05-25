@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Smoke-test an installed or local xhs-feishu-delivery skill directory.
 
 The smoke test creates a temporary workspace, initializes it from the skill,
@@ -53,6 +53,56 @@ def load_json(path: Path) -> dict[str, Any]:
     return data
 
 
+def write_smoke_spec(workspace: Path) -> None:
+    """Create a temporary spec for the smoke test without shipping starter copy."""
+    spec = {
+        "review_id": "publish-smoke-test",
+        "content_id": "smoke-ai-tool-evaluation",
+        "title": "Smoke Test",
+        "topic": "Smoke test topic",
+        "content_type": "ai_product_release",
+        "summary": "Smoke test fixture for packaging.",
+        "hot_source": "smoke-test",
+        "source_urls": ["https://example.com/ai-tool", "https://example.com/ai-tool-docs"],
+        "source_verification": {"source": "smoke test fixture", "checked_at": "2026-05-25T00:00:00+08:00"},
+        "insight_pack": {
+            "core_hook": "Smoke hook for packaging.",
+            "one_sentence_event": "Smoke event for packaging.",
+            "why_it_matters": "Smoke reason for packaging.",
+            "key_takeaways": ["Smoke takeaway one", "Smoke takeaway two", "Smoke takeaway three"],
+            "use_cases": ["Smoke use case one", "Smoke use case two"],
+            "actionable_framework": {
+                "name": "Smoke framework",
+                "items": ["Smoke item one", "Smoke item two"],
+            },
+            "source_facts": [
+                {"claim": "Smoke fact one.", "source_url": "https://example.com/ai-tool"},
+                {"claim": "Smoke fact two.", "source_url": "https://example.com/ai-tool-docs"},
+            ],
+            "boundaries": ["Smoke boundary one", "Smoke boundary two"],
+            "reader_payoff": "Smoke payoff for packaging.",
+        },
+        "project_facts": {},
+        "title_candidates": [
+            {"title": "Smoke Test", "type": "反差", "reason": "强调演示和真实使用之间的落差"}
+        ],
+        "body_full": "SMOKE TEST BODY. Fixture only. Do not use as Xiaohongshu copywriting guidance.",
+        "tags": ["smoke", "test", "fixture"],
+        "image_slug": "smoke-test",
+        "pages": [
+            {"page_id": "01-cover", "title": "Smoke Test", "subtitle": "先看能不能进流程", "visual": "A creator comparing a shiny demo screen with a real work desk."},
+            {"page_id": "02-gap", "title": "Smoke Page 2", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
+            {"page_id": "03-task", "title": "Smoke Page 3", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
+            {"page_id": "04-output", "title": "Smoke Page 4", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
+            {"page_id": "05-rework", "title": "Smoke Page 5", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
+            {"page_id": "06-save", "title": "Smoke Page 6", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
+        ],
+    }
+    path = workspace / "asset-generation" / "content_spec.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def assert_ok(condition: bool, failures: list[str], message: str) -> None:
     if not condition:
         failures.append(message)
@@ -68,12 +118,13 @@ def smoke_test(skill_dir: Path, keep_workspace: bool) -> tuple[dict[str, Any], i
         asset_script = workspace / "asset-generation" / "generate_current_assets.py"
         config_path = workspace / ".baoyu-skills" / "baoyu-image-cards" / "EXTEND.md"
         package_path = workspace / "asset-generation" / "outputs" / "current-publish-assets.json"
-        cover_prompt = workspace / "image-generation" / "prompts" / "starter-ai-tool-evaluation" / "01-cover.md"
+        cover_prompt = workspace / "image-generation" / "prompts" / "smoke-test" / "01-cover.md"
 
         assert_ok(init_script.exists(), failures, "init_workspace_missing")
         if init_script.exists():
             completed = run([sys.executable, str(init_script), "--workspace", str(workspace)])
             assert_ok(completed.returncode == 0, failures, f"init_workspace_failed:{completed.stderr.strip()}")
+        write_smoke_spec(workspace)
 
         assert_ok(config_path.exists(), failures, "baoyu_extend_missing")
         if config_path.exists():
@@ -103,7 +154,7 @@ def smoke_test(skill_dir: Path, keep_workspace: bool) -> tuple[dict[str, Any], i
             assert_ok(f"style: {EXPECTED_IMAGE_STYLE}" in prompt_text, failures, "cover_style_missing")
             assert_ok("Cover hook rules:" in prompt_text, failures, "cover_hook_rules_missing")
             assert_ok("central GitHub-style project card" in prompt_text, failures, "cover_project_visibility_missing")
-            assert_ok("title: 别被AI演示骗了" in prompt_text, failures, "cover_title_missing")
+            assert_ok("title: Smoke Test" in prompt_text, failures, "cover_title_missing")
 
         result = {
             "status": "ok" if not failures else "failed",
@@ -137,3 +188,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

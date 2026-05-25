@@ -9,7 +9,7 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, or browser
 ## What You Get
 
 - A Codex skill entrypoint: `SKILL.md`.
-- A complete workspace template under `assets/workspace-template`.
+- A clean workspace template under `assets/workspace-template`. It ships scripts and folders only, not a prewritten post.
 - A wrapper for initializing, validating, packaging, and sending.
 - A model-first image step: final image cards should come from `baoyu-image-cards`/Codex `imagegen`, using the bundled `xhs-warm-cute-open-source` style for warm cute Xiaohongshu covers that still expose GitHub/open-source facts clearly.
 - A workspace-local sent history file that records successful Feishu deliveries and blocks repeated topics before the next asset generation.
@@ -135,7 +135,8 @@ Create the post assets:
 # 5. Before automatic topic selection, inspect previous successful sends.
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --history
 
-# 6. Edit this file for your topic, content_type, insight_pack, body, tags, and six image cards.
+# 6. Let Codex create this file for the current topic from the mature skill chain.
+#    Do not copy old outputs or starter posts into it.
 notepad .\asset-generation\content_spec.json
 
 # 7. Check this spec against sent history. Duplicate repo/source/topic keys are blocked.

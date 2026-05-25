@@ -70,7 +70,7 @@ local image renderer, treat that instruction as obsolete.
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`
 2. The target workspace must contain the four workflow directories:
    `asset-generation`, `image-generation`, `publish-mainline`, and `feishu-delivery`.
-3. Prepare `asset-generation/content_spec.json` using the Required Mature Skill Chain above. It must contain the current topic, `content_type`, `insight_pack`, title, body, tags, image slug, source verification, and exactly 6 image page definitions.
+3. Create `asset-generation/content_spec.json` from the current topic using the Required Mature Skill Chain above. The template intentionally does not ship a starter post, so do not reuse old workspace output or old examples as copy. The file must contain the current topic, `content_type`, `insight_pack`, title, body, tags, image slug, source verification, and exactly 6 image page definitions.
 4. Check the current spec against sent history before image work:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-history`
    If it reports `duplicate`, choose a new topic/angle/source. Only set `history.allow_repeat: true` when the user explicitly asks to repeat a topic.
@@ -129,7 +129,6 @@ local image renderer, treat that instruction as obsolete.
 - For repository structure and every tracked file, read `PROJECT_GUIDE.md`.
 - For the content spec shape, read `references/content_spec.md`.
 - For the model-image handoff contract, read `references/image_generation.md`.
-- For a sanitized starter spec, copy from `assets/content_spec.example.json`.
 
 ## Validation
 

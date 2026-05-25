@@ -25,6 +25,10 @@ For a new workspace, initialize the bundled template first:
 
 `python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`
 
+The template does not include a starter `content_spec.json`. Create that file
+fresh for each real post from the current topic, source facts, and insight pack.
+Do not copy old workspace outputs or old examples as the body source.
+
 Required fields:
 
 - `review_id`: stable delivery run id.
