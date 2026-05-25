@@ -393,6 +393,16 @@ class SkillStabilityTests(unittest.TestCase):
         self.assertIn("sys.executable", text)
         self.assertNotIn(".\\publish-mainline\\build_manual_publish_package.py", text)
 
+    def test_feishu_scripts_bypass_proxy_by_default(self) -> None:
+        for relative_path in [
+            "feishu-delivery/check_feishu_ready.py",
+            "feishu-delivery/send_delivery_card.py",
+        ]:
+            text = (ROOT / "assets" / "workspace-template" / relative_path).read_text(encoding="utf-8")
+            self.assertIn("DEFAULT_BYPASS_PROXY = True", text)
+            self.assertIn("request.ProxyHandler({})", text)
+            self.assertIn("URL_OPENER.open", text)
+
     def test_send_records_successful_delivery_in_history(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp) / "workspace"

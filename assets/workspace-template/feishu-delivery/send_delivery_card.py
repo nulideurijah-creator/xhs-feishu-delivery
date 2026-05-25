@@ -50,6 +50,18 @@ ALLOWED_RECEIVE_ID_TYPES = {"chat_id", "open_id", "user_id", "union_id", "email"
 CARD_FORBIDDEN_TERMS = ["发布方式", "人工发布包", "发布前检查", "**状态**"]
 DEFAULT_NETWORK_ATTEMPTS = 6
 DEFAULT_NETWORK_RETRY_SECONDS = 30
+DEFAULT_BYPASS_PROXY = True
+
+
+def should_bypass_proxy() -> bool:
+    """Bypass flaky local desktop proxies for Feishu unless explicitly disabled."""
+    value = os.environ.get("FEISHU_BYPASS_PROXY")
+    if value is None:
+        return DEFAULT_BYPASS_PROXY
+    return value.strip().lower() not in {"0", "false", "no", "off"}
+
+
+URL_OPENER = request.build_opener(request.ProxyHandler({})) if should_bypass_proxy() else request.build_opener()
 
 
 def now() -> str:
@@ -154,7 +166,7 @@ def urlopen_with_retry(req: request.Request, timeout: int, action: str) -> str:
     last_error: BaseException | None = None
     for attempt in range(1, attempts + 1):
         try:
-            with request.urlopen(req, timeout=timeout) as response:
+            with URL_OPENER.open(req, timeout=timeout) as response:
                 return response.read().decode("utf-8")
         except error.HTTPError:
             raise
