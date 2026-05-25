@@ -18,6 +18,7 @@ Use this skill to operate the local workflow that creates a Xiaohongshu image-te
 - Do not include music fields.
 - Do not treat this workflow as data analytics, Obsidian memory, competitor analysis, or self-improvement tracking.
 - Do not replace the mature skill chain with ad hoc model guesses when a listed skill is available.
+- Do not ask the user to choose image watermark, visual style, layout, palette, image backend, or preference save scope. This workflow already pins those choices in `.baoyu-skills/baoyu-image-cards/EXTEND.md`.
 
 ## Required Mature Skill Chain
 
@@ -52,6 +53,8 @@ Use this chain for a new post:
    - The final body should sound like a real AI-tools Xiaohongshu creator sharing a useful discovery, not a report, listicle, product manual, or training handout.
 6. **Image-card structure and prompts**: use `baoyu-image-cards` with the bundled `xhs-warm-cute-open-source` preference.
    - For GitHub stars, open-source projects, or repo-based topics, put the verified repo/project name, star count, license/open-source badge, and source cue on the first card. Do not hide these facts in later pages or invent unverified counts.
+   - Use the bundled defaults non-interactively: no watermark, style `xhs-warm-cute-open-source`, layout `balanced`, palette `macaron`, backend `imagegen`, batch size `4`, and confirmation skipped with `--yes` or the runtime's equivalent "use defaults directly" instruction.
+   - If `baoyu-image-cards` asks first-use preference questions, answer them from the bundled config instead of asking the user.
 7. **Final PNG generation**: use Codex `imagegen` or the user's equivalent real image model as the raster backend.
 8. **Packaging and Feishu delivery**: use this `xhs-feishu-delivery` workflow.
 
@@ -78,6 +81,7 @@ local image renderer, treat that instruction as obsolete.
 6. Generate the six image cards with the mature image-card path used by the owner:
    use `baoyu-image-cards` to structure the series and Codex `imagegen` as the raster backend.
    If those skills/tools are available in the current runtime, explicitly use them; do not replace them with shell, Python, browser, or canvas code.
+   Invoke `baoyu-image-cards` with the workspace `.baoyu-skills/baoyu-image-cards/EXTEND.md` defaults and `--yes` / equivalent direct-default confirmation. Do not pause to ask about watermark text, style, layout, palette, backend, or preference save location.
    Save each final PNG exactly to the `image_path` listed in `asset-generation/outputs/current-publish-assets.json`.
    If the user has a different image model available, use that model only if it can save final PNGs to the same paths.
    If a real image model/backend is not available, stop and report that image generation is blocked. Do not create a Python, PIL, SVG, HTML, canvas, screenshot, browser, or placeholder renderer to work around it.

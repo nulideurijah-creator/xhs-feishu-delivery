@@ -53,11 +53,12 @@ FORBIDDEN_PHRASES = [
     # Keep this list short and concrete; users can adapt it in their workspace.
     "它做的事很直接",
     "这个数据先当热度参考",
+    "这个数据仅是一个参考",
     "但别只看 GitHub star",
     "这类项目真正值得看的是方向",
-    "不仅",
-    "而且",
-    "此外",
+    "不仅……还",
+    "不仅...还",
+    "此外，",
     "综上",
     "首先，",
     "其次，",
@@ -406,6 +407,7 @@ def build_package(spec: dict[str, Any], history_check: dict[str, Any]) -> dict[s
             "copy": "references/editor_prompt.md + direct model writing",
             "image_prompts": "baoyu-image-cards + Codex imagegen",
             "image_style": IMAGE_STYLE,
+            "image_defaults": "use workspace .baoyu-skills EXTEND.md non-interactively: no watermark, balanced layout, macaron palette, imagegen backend, --yes/direct defaults",
         },
         "created_at": now(),
     }

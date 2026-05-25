@@ -91,6 +91,8 @@ class SkillStabilityTests(unittest.TestCase):
             "sent history",
             "--check-history",
             "content-history/sent-posts.jsonl",
+            "Do not ask the user to choose image watermark",
+            "--yes",
         ]:
             self.assertIn(marker, text)
 
@@ -105,6 +107,19 @@ class SkillStabilityTests(unittest.TestCase):
             "这个数据仅是一个参考",
             "我会把它放在三个场景里用",
             "Accepted Voice Target",
+        ]:
+            self.assertIn(marker, text)
+
+    def test_image_generation_contract_uses_noninteractive_baoyu_defaults(self) -> None:
+        text = (ROOT / "references" / "image_generation.md").read_text(encoding="utf-8")
+        for marker in [
+            "watermark: none",
+            "xhs-warm-cute-open-source",
+            "layout: `balanced`",
+            "palette: `macaron`",
+            "backend: `imagegen`",
+            "confirmation: skipped",
+            "Do not ask the user to pick",
         ]:
             self.assertIn(marker, text)
 
@@ -156,6 +171,8 @@ class SkillStabilityTests(unittest.TestCase):
                 "editor_prompt",
                 "baoyu-image-cards",
                 "imagegen",
+                "image_defaults",
+                "--yes",
             ]:
                 self.assertIn(marker, source_text)
 
@@ -218,6 +235,20 @@ class SkillStabilityTests(unittest.TestCase):
             spec_path = workspace / "asset-generation" / "content_spec.json"
             spec = write_smoke_spec(workspace)
             spec["body_full"] = "它最适合三类人。这个工具值得关注。我会把它放在三个场景里用。总结一下，AI 工具要看长期价值。"
+            spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+            generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
+            self.assertNotEqual(generated.returncode, 0)
+            self.assertIn("body contains forbidden phrases", generated.stderr + generated.stdout)
+
+    def test_generate_assets_rejects_old_star_reference_phrase(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp) / "workspace"
+            init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
+            self.assertEqual(init.returncode, 0, init.stderr)
+            spec_path = workspace / "asset-generation" / "content_spec.json"
+            spec = write_smoke_spec(workspace)
+            spec["body_full"] = "这个数据先当热度参考。这个数据仅是一个参考。"
             spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
             generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
@@ -378,6 +409,26 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertEqual(report["status"], "blocked")
             self.assertIn("images_missing:6", report["blocked_reasons"])
 
+    def test_doctor_blocks_playwright_mcp_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            workspace = Path(temp) / "workspace"
+            init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
+            self.assertEqual(init.returncode, 0, init.stderr)
+            write_smoke_spec(workspace)
+            generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
+            self.assertEqual(generated.returncode, 0, generated.stderr)
+            artifact = workspace / ".playwright-mcp" / "page.yml"
+            artifact.parent.mkdir(parents=True, exist_ok=True)
+            artifact.write_text("legacy browser automation artifact\n", encoding="utf-8")
+
+            doctor = run([sys.executable, str(workspace / "diagnostics" / "doctor.py")], cwd=workspace)
+            self.assertEqual(doctor.returncode, 0, doctor.stderr)
+            report = json.loads(
+                (workspace / "diagnostics" / "outputs" / "doctor-report.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(report["status"], "blocked")
+            self.assertTrue(any(item.startswith("risky_artifacts_found:") for item in report["blocked_reasons"]))
+
     def test_safety_scan_blocks_legacy_renderer(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             skill_dir = Path(temp) / "skill"
@@ -394,6 +445,24 @@ class SkillStabilityTests(unittest.TestCase):
             )
             self.assertNotEqual(completed.returncode, 0)
             self.assertIn("forbidden file name", completed.stderr + completed.stdout)
+
+    def test_safety_scan_blocks_playwright_mcp_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            skill_dir = Path(temp) / "skill"
+            artifact = skill_dir / ".playwright-mcp" / "page.yml"
+            artifact.parent.mkdir(parents=True)
+            (skill_dir / "SKILL.md").write_text("---\nname: test\ndescription: test\n---\n", encoding="utf-8")
+            artifact.write_text("legacy browser state\n", encoding="utf-8")
+            completed = run(
+                [
+                    sys.executable,
+                    str(ROOT / "scripts" / "validate_skill_safety.py"),
+                    "--skill-dir",
+                    str(skill_dir),
+                ]
+            )
+            self.assertNotEqual(completed.returncode, 0)
+            self.assertIn("forbidden path", completed.stderr + completed.stdout)
 
 
 if __name__ == "__main__":

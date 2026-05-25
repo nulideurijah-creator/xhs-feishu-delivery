@@ -17,6 +17,11 @@ FORBIDDEN_NAMES = {
     "cookies.json",
     "xhs-login-qrcode.png",
     "render_current_cards.py",
+    ".playwright-mcp",
+}
+
+FORBIDDEN_PATH_PARTS = {
+    ".playwright-mcp",
 }
 
 FORBIDDEN_TEXT = [
@@ -52,6 +57,8 @@ TEXT_EXTENSIONS = {
 def iter_text_files(root: Path):
     """Yield text-like files that should be scanned for risky content."""
     for path in root.rglob("*"):
+        if any(part in FORBIDDEN_PATH_PARTS for part in path.relative_to(root).parts):
+            raise ValueError(f"forbidden path: {path}")
         if not path.is_file():
             continue
         if path.name == "validate_skill_safety.py":

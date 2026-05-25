@@ -78,6 +78,16 @@ The image-generation handoff is documented in [references/image_generation.md](r
 
 If any supporting skill or image backend is unavailable, stop and fix that first. Do not replace final images with PIL, SVG, HTML, browser screenshots, or placeholder diagrams.
 
+## Stable Defaults
+
+The workflow is intentionally opinionated so a new Codex window does not reopen old choices:
+
+- Xiaohongshu posting is manual only.
+- Feishu cards are buttonless and contain the complete title, body, tags, and six images.
+- Final images use `baoyu-image-cards` plus `imagegen`; local drawing scripts are not part of the workflow.
+- Image-card defaults come from `assets/workspace-template/.baoyu-skills/baoyu-image-cards/EXTEND.md`: no watermark, `xhs-warm-cute-open-source`, `balanced`, `macaron`, `imagegen`, batch size `4`.
+- If the image-card skill asks first-use preference questions, answer from the bundled defaults and continue with `--yes` or the runtime's equivalent direct-default instruction.
+
 ## Quick Start
 
 Use this path for a first clean install.

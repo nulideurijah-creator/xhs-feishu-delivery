@@ -24,6 +24,21 @@ template renderer for final images.
    those skills/tools directly. Do not replace this step with shell, Python,
    browser automation, or generated HTML.
 
+   Use the bundled defaults without asking the user again:
+
+   - watermark: none
+   - style: `xhs-warm-cute-open-source`
+   - layout: `balanced`
+   - palette: `macaron`
+   - backend: `imagegen`
+   - batch size: `4`
+   - confirmation: skipped with `--yes` or the runtime's equivalent
+
+   If `baoyu-image-cards` asks first-use preference questions, answer from
+   `.baoyu-skills/baoyu-image-cards/EXTEND.md`. Do not ask the user to pick a
+   watermark, style, layout, palette, backend, or preference save scope for this
+   workflow.
+
    If no real image model/backend is available, stop here and report the block.
    Do not write code that draws substitute cards locally.
 

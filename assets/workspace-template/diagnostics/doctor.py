@@ -83,6 +83,8 @@ DANGEROUS_FILE_NAMES = {
 }
 
 DANGEROUS_PATH_FRAGMENTS = [
+    ".playwright-mcp",
+    "playwright-mcp",
     "xiaohongshu" + "-mcp",
     "ws" + "_review_server",
     "callback" + "_server",

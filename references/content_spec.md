@@ -97,6 +97,10 @@ packaging:
 
 `image-generation/outputs/images/<image_slug>/<page_id>.png`
 
+Use the workspace `.baoyu-skills/baoyu-image-cards/EXTEND.md` defaults directly
+when generating images: no watermark, `xhs-warm-cute-open-source`, balanced
+layout, macaron palette, Codex `imagegen`, and no extra preference questions.
+
 Do not use a local drawing script, PIL renderer, SVG, HTML, or canvas output as
 the final image-card source.
 
