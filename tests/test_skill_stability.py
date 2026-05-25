@@ -53,21 +53,15 @@ def write_smoke_spec(workspace: Path) -> dict:
                 {"claim": "Smoke fact one.", "source_url": "https://example.com/ai-tool"},
                 {"claim": "Smoke fact two.", "source_url": "https://example.com/ai-tool-docs"},
             ],
-            "why_now": "Smoke reason for writing now.",
-            "creator_angle": "Write like a Xiaohongshu AI tools creator sharing one useful discovery.",
-            "audience": "AI tool users and indie builders.",
             "do_not_say": ["Do not use formula-title language."],
         },
         "project_facts": {},
         "body_full": (
-            "我最近在做一个自动化 demo，翻到这个工具的文档时停了一下：它不是让我把流程全写死，"
-            "而是先把目标和素材交进去，再生成一份可检查的发布包。\n\n"
-            "我挺喜欢这种位置。做内容工作最烦的是前面聊得很热闹，到了交付又靠人手补图、补标签、补检查，"
-            "一不小心就漏。这个 smoke fixture 只是测试用，但它模拟的是同一条链路：有事实、有正文、有 6 张图的路径，"
-            "最后还能进本地校验。\n\n"
-            "别指望它替代真实选题判断，至少测试里能把最容易跑飞的环节拦住，这对维护 skill 比只看文档舒服。"
+            "我最近在做一个 agent demo, 最烦的是流程跑起来以后才发现前面理解歪了。"
+            "这个小工具让我停了一下, 因为它没有急着堆功能, 而是先把任务拆分和状态看清楚。"
+            "这点不算炫, 但对每天调工具的人挺实际。"
         ),
-        "tags": ["AI工具", "自动化", "小红书运营", "工作流", "内容交付", "Feishu"],
+        "tags": ["AI工具", "开发工具", "Agent", "效率工具", "开源项目"],
         "image_slug": "smoke-test",
         "pages": [
             {
@@ -98,13 +92,11 @@ class SkillStabilityTests(unittest.TestCase):
             "agent-reach",
             "writing_brief",
             "references/creator_prompt.md",
-            "references/copy_quality_gate.md",
             "baoyu-image-cards",
             "imagegen",
             "Do not invent a hot topic",
             "sent history",
             "--check-history",
-            "--check-copy",
             "content-history/sent-posts.jsonl",
             "Do not ask the user to choose image watermark",
             "--yes",
@@ -119,32 +111,18 @@ class SkillStabilityTests(unittest.TestCase):
         self.assertFalse((ROOT / "references" / ("editor" + "_prompt.md")).exists())
         text = prompt_path.read_text(encoding="utf-8")
         for marker in [
-            "Do not try to \"fully explain the tool.\"",
-            "The body must not read like an AI tool manual",
-            "A real usage or discovery scene",
-            "Some personal judgment",
-            "A little natural complaint",
-            "Useful facts hidden inside the story and judgment",
-            "Never write",
-            "它干的事很简单",
+            "小红书 AI 编程领域真人博主",
+            "`writing_brief`",
+            "只用这份提示词生成最终",
+            "Coding Agent",
+            "圈内工具避坑内容",
+            "接地气，偏干货提醒风",
+            "用词禁令",
+            "Final output must be publishable title, body, and tags only.",
         ]:
             self.assertIn(marker, text)
         for term in legacy_terms():
             self.assertNotIn(term, text)
-
-    def test_copy_quality_gate_is_documented_as_hard_gate(self) -> None:
-        gate_path = ROOT / "references" / "copy_quality_gate.md"
-        self.assertTrue(gate_path.exists())
-        text = gate_path.read_text(encoding="utf-8")
-        for marker in [
-            "deterministic local hard gate",
-            "AI tool manual",
-            "title has a Xiaohongshu hook",
-            "first-person discovery scene",
-            "natural complaint or friction",
-            "python .\\run_xhs_delivery.py --check-copy",
-        ]:
-            self.assertIn(marker, text)
 
     def test_image_generation_contract_uses_noninteractive_baoyu_defaults(self) -> None:
         text = (ROOT / "references" / "image_generation.md").read_text(encoding="utf-8")
@@ -282,33 +260,46 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertNotEqual(generated.returncode, 0)
             self.assertIn("writing_brief.facts", generated.stderr + generated.stdout)
 
-    def test_generate_assets_rejects_template_voice(self) -> None:
+    def test_generate_assets_rejects_stale_cover_title_after_copy_rewrite(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp) / "workspace"
             init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
             self.assertEqual(init.returncode, 0, init.stderr)
             spec_path = workspace / "asset-generation" / "content_spec.json"
             spec = write_smoke_spec(workspace)
-            spec["body_full"] = "它最适合三类人。这个工具值得关注。我会把它放在三个场景里用。总结一下，AI 工具要看长期价值。"
+            spec["pages"][0]["title"] = "旧封面标题"
             spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
             generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
             self.assertNotEqual(generated.returncode, 0)
-            self.assertIn("body contains forbidden phrases", generated.stderr + generated.stdout)
+            self.assertIn("cover page title must match current title", generated.stderr + generated.stdout)
 
-    def test_generate_assets_rejects_old_star_reference_phrase(self) -> None:
-        with tempfile.TemporaryDirectory() as temp:
-            workspace = Path(temp) / "workspace"
-            init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
-            self.assertEqual(init.returncode, 0, init.stderr)
-            spec_path = workspace / "asset-generation" / "content_spec.json"
-            spec = write_smoke_spec(workspace)
-            spec["body_full"] = "这个数据先当热度参考。这个数据仅是一个参考。"
-            spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    def test_deepseek_copy_syncs_cover_title(self) -> None:
+        module_path = ROOT / "assets" / "workspace-template" / "asset-generation" / "write_copy_deepseek.py"
+        spec = importlib.util.spec_from_file_location("write_copy_deepseek", module_path)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        payload = {"title": "新标题", "pages": [{"page_id": "01-cover", "title": "旧标题"}]}
+        self.assertTrue(module.sync_cover_page(payload))
+        self.assertEqual(payload["pages"][0]["title"], "新标题")
 
-            generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
-            self.assertNotEqual(generated.returncode, 0)
-            self.assertIn("body contains forbidden phrases", generated.stderr + generated.stdout)
+    def test_deepseek_copy_rejects_prompt_forbidden_fragments(self) -> None:
+        module_path = ROOT / "assets" / "workspace-template" / "asset-generation" / "write_copy_deepseek.py"
+        spec = importlib.util.spec_from_file_location("write_copy_deepseek_forbidden", module_path)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.loader)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with self.assertRaisesRegex(ValueError, "forbidden fragments"):
+            module.normalize_copy(
+                {
+                    "title": "这个工具挺顺",
+                    "body_full": "首先，这个更新值得看。总体来说，它很适合开发者。",
+                    "tags": ["AI工具", "开发工具", "Agent", "开源项目", "效率工具"],
+                }
+            )
 
     def test_generate_assets_rejects_duplicate_github_repo_history(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -425,7 +416,6 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertEqual(run([sys.executable, str(workspace / "feishu-delivery" / "build_delivery_card.py")], cwd=workspace).returncode, 0)
 
             module_path = workspace / "feishu-delivery" / "send_delivery_card.py"
-            sys.modules.pop("history_utils", None)
             spec = importlib.util.spec_from_file_location("workspace_send_delivery_card", module_path)
             self.assertIsNotNone(spec)
             self.assertIsNotNone(spec.loader)

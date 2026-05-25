@@ -9,16 +9,12 @@ call Feishu, generate images, or publish anything.
 from __future__ import annotations
 
 import json
-import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "asset-generation"))
-from copy_quality import validate_copy_quality  # noqa: E402
-
 OUT = ROOT / "diagnostics" / "outputs"
 REPORT_JSON = OUT / "doctor-report.json"
 REPORT_MD = OUT / "doctor-report.md"
@@ -159,8 +155,6 @@ def check_content_spec(blockers: list[str]) -> dict[str, Any]:
     add(not isinstance(tags, list) or not tags, blockers, "tags_missing")
     add(not isinstance(pages, list) or len(pages) != 6, blockers, "pages_not_6")
     check_writing_brief(brief, blockers)
-    copy_quality = validate_copy_quality(spec)
-    add(copy_quality["status"] != "pass", blockers, "copy_quality_failed")
     return {
         "exists": True,
         "title": title,
@@ -169,7 +163,6 @@ def check_content_spec(blockers: list[str]) -> dict[str, Any]:
         "tag_count": len(tags) if isinstance(tags, list) else 0,
         "page_count": len(pages) if isinstance(pages, list) else 0,
         "image_slug": spec.get("image_slug", ""),
-        "copy_quality": copy_quality,
     }
 
 
@@ -177,7 +170,7 @@ def check_writing_brief(brief: Any, blockers: list[str]) -> None:
     if not isinstance(brief, dict):
         blockers.append("writing_brief_invalid")
         return
-    for key in ["why_now", "creator_angle", "audience", "facts"]:
+    for key in ["facts"]:
         add(not brief.get(key), blockers, f"writing_brief_missing:{key}")
     facts = brief.get("facts", [])
     add(not isinstance(facts, list) or len(facts) < 2, blockers, "writing_brief_facts_lt_2")

@@ -4,7 +4,7 @@ The workspace file `asset-generation/content_spec.json` is the single source of 
 
 Use this reference when editing the JSON file by hand. JSON does not support real comments, so explanatory notes live here and in `PROJECT_GUIDE.md`.
 
-Before editing this file for a real post, follow the chain in `SKILL.md`: use `aihot` for AI-topic discovery unless the user already supplied a concrete topic/source, use `agent-reach` to verify material facts, create a factual `writing_brief`, read `references/creator_prompt.md`, write the final title/body/tags directly with the current model, then use `baoyu-image-cards` plus `imagegen` for the final images.
+Before editing this file for a real post, follow the chain in `SKILL.md`: use `aihot` for AI-topic discovery unless the user already supplied a concrete topic/source, use `agent-reach` to verify material facts, pass the factual `writing_brief` plus `references/creator_prompt.md` to the current model to write the final title/body/tags directly, then use `baoyu-image-cards` plus `imagegen` for the final images.
 
 Before automatic topic selection, inspect sent history:
 
@@ -13,12 +13,6 @@ Before automatic topic selection, inspect sent history:
 Before generating assets for the current spec, check duplicate history:
 
 `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-history`
-
-Before generating image prompts or final PNGs, check copy quality:
-
-`python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-copy`
-
-If the command reports `copy_blocked`, rewrite `title`, `body_full`, and `tags` from the verified facts. Do not continue to image generation, local-only validation, or Feishu sending.
 
 For a new workspace, initialize the bundled template first:
 
@@ -47,12 +41,9 @@ Required fields:
 `writing_brief` must include:
 
 - `facts`: at least two source-backed factual claims, each with `claim` and `source_url`.
-- `why_now`: why this topic matters now.
-- `creator_angle`: the creator's point of view for this post.
-- `audience`: who should read or save this post.
 - `do_not_say`: optional list of phrases, claims, or angles to avoid.
 
-Keep `writing_brief` factual. Do not turn it into a numbered outline, fixed framework, title formula, or section plan.
+Keep `writing_brief` factual: facts plus source-backed cautions only.
 
 Each `pages` item must include:
 
@@ -62,9 +53,10 @@ Each `pages` item must include:
 - `visual`: visual direction for the image prompt.
 - `layout`: optional per-card baoyu layout override such as `flow`, `comparison`, `list`, or `balanced`.
 
-Use `references/creator_prompt.md` before writing `body_full`. The body should feel like a real Xiaohongshu AI-tools creator sharing a useful discovery with a point of view.
+The first page is the cover. Its `title` must match the current top-level `title`.
+If a model rewrite changes `title`, refresh `pages` before running `generate_current_assets.py`.
 
-Use `references/copy_quality_gate.md` as the hard local standard for title hook and creator-style body quality. The local workflow will block documentation-style titles, AI-tool-manual bodies, fixed checklist language, and phrases such as "它干的事很简单", "它的好处是", "我会把它收藏给三类人", "如果你是", and "总结一下".
+Use `references/creator_prompt.md` before writing `body_full`. The body should feel like a real Xiaohongshu AI-tools creator sharing a useful discovery with a point of view.
 
 For GitHub stars, open-source projects, or repo-based topics, fill `project_facts` before generating prompts. The cover prompt will then ask the image model to show the project card, star count, and open-source/license badge on the first image instead of hiding those facts in later cards.
 

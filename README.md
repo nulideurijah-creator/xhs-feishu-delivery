@@ -12,7 +12,7 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, browser co
 - A clean workspace template under `assets/workspace-template`.
 - A wrapper for initialization, diagnostics, Feishu checks, packaging, local validation, and sending.
 - A direct model-writing flow using `references/creator_prompt.md`.
-- A deterministic copy-quality gate that blocks tool-manual, report, and checklist copy before image work.
+- An optional DeepSeek v4 Flash writer that updates `title`, `body_full`, and `tags` from the verified factual spec.
 - A model-image handoff using `baoyu-image-cards` and Codex `imagegen`.
 - A bundled `xhs-warm-cute-open-source` visual style for warm cute Xiaohongshu AI cards with visible GitHub/open-source facts on repo-based covers.
 - Workspace-local sent history that records successful Feishu deliveries and blocks repeated topics.
@@ -38,13 +38,12 @@ flowchart LR
   C --> D["creator_prompt + model write title/body/tags"]
   D --> E["content_spec.json"]
   E --> F["Check sent history for duplicates"]
-  F --> G["Check copy quality gate"]
-  G --> H["baoyu-image-cards prepares 6-card structure"]
-  H --> I["imagegen creates 6 PNG cards"]
-  I --> J["Build manual package"]
-  J --> K["Send complete Feishu card"]
-  K --> L["Record sent history"]
-  L --> M["User posts manually on Xiaohongshu"]
+  F --> G["baoyu-image-cards prepares 6-card structure"]
+  G --> H["imagegen creates 6 PNG cards"]
+  H --> I["Build manual package"]
+  I --> J["Send complete Feishu card"]
+  J --> K["Record sent history"]
+  K --> L["User posts manually on Xiaohongshu"]
 ```
 
 ## Skills Used
@@ -55,7 +54,7 @@ flowchart LR
 - `imagegen`: generates the final raster PNG cards.
 - `xhs-feishu-delivery`: packages the result and sends it to Feishu.
 
-Title and body are written directly by the current model from `writing_brief` and `references/creator_prompt.md`. There is no formula-title layer and no extra rewrite layer.
+Title and body are written directly from `writing_brief` and `references/creator_prompt.md`. There is no formula-title layer and no extra rewrite layer. If the workspace has `DEEPSEEK_API_KEY` set in `.env` or the environment, `asset-generation/write_copy_deepseek.py` can use DeepSeek v4 Flash for this writing step.
 
 ## Prerequisites
 
@@ -126,10 +125,10 @@ python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_deliv
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --check-history
 ```
 
-4. Check the title/body/tags against the local creator-copy gate:
+4. Optional: write title/body/tags with DeepSeek v4 Flash after the factual spec exists:
 
 ```powershell
-python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --check-copy
+python .\asset-generation\write_copy_deepseek.py
 ```
 
 5. Generate copy output and image prompt files:
@@ -183,9 +182,6 @@ Minimum shape:
       {"claim": "事实 1", "source_url": "https://example.com/source-1"},
       {"claim": "事实 2", "source_url": "https://example.com/source-2"}
     ],
-    "why_now": "现在为什么值得写",
-    "creator_angle": "博主这篇要怎么讲",
-    "audience": "谁应该看或收藏",
     "do_not_say": []
   },
   "project_facts": {
@@ -208,18 +204,17 @@ Minimum shape:
 }
 ```
 
+The cover page title must match the top-level `title`. If the model writing step changes the title, refresh `pages` before generating assets.
+
 See [references/content_spec.md](references/content_spec.md) for details.
 
 ## Quality Standard
 
 - Stay inside the AI/tools/dev productivity vertical.
 - Ground the post in at least two source-backed facts.
-- Let the current model write the final title/body/tags directly from the brief.
-- The title must have a Xiaohongshu hook, not a documentation heading like "项目介绍" or "使用指南".
-- The body should sound like a real Xiaohongshu AI creator sharing a discovery, with a concrete scene, personal judgment, and a small natural friction point.
-- GitHub/open-source posts should make useful facts visible through the creator's story and judgment, not a fixed checklist.
-- The title/body/tags must pass the local copy-quality gate before image generation, local packaging, or Feishu delivery.
-- Avoid empty phrases like "值得关注", "很有潜力", "它干的事很简单", "它的好处是", "首先/其次/最后", or report-style transitions.
+- Let the current model write the final title/body/tags directly from the verified facts and `references/creator_prompt.md`.
+- GitHub/open-source posts should explain what the project does well, where it is useful, who should save it, and why it is worth trying.
+- Use "这个热度星标仅是一个参考" when star count needs caveat wording.
 
 ## Sent History
 

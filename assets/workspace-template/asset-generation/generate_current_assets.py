@@ -16,7 +16,6 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "content-history"))
 from history_utils import assert_not_duplicate  # noqa: E402
-from copy_quality import assert_copy_quality, validate_copy_quality  # noqa: E402
 
 SPEC_PATH = ROOT / "asset-generation" / "content_spec.json"
 OUT = ROOT / "asset-generation" / "outputs"
@@ -28,32 +27,6 @@ IMAGE_PRESET = "sketch-summary"
 IMAGE_STYLE = "xhs-warm-cute-open-source"
 IMAGE_LAYOUT = "balanced"
 IMAGE_PALETTE = "macaron"
-
-FORBIDDEN_PHRASES = [
-    "它最适合三类人",
-    "这个数据先当热度参考",
-    "这个数据仅是一个参考",
-    "但别只看 GitHub star",
-    "这类项目真正值得看的是方向",
-    "不仅……还",
-    "不仅...还",
-    "此外，",
-    "综上",
-    "首先，",
-    "其次，",
-    "最后，",
-    "总结一下",
-    "值得关注",
-    "很有潜力",
-    "它的好处是",
-    "我现在判断一个 AI 工具，会先问 3 个问题",
-    "所以现在我看一个 AI 工具，不先问",
-    "我会把它放在三个场景里用",
-    "做的就是这件事",
-    "我比较喜欢它克制的地方",
-    "它不是杀毒软件，也不是运行时监控",
-]
-
 
 def now() -> str:
     return datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds")
@@ -104,19 +77,22 @@ def validate_spec(spec: dict[str, Any]) -> None:
     pages = spec.get("pages", [])
     if not isinstance(pages, list) or len(pages) != 6:
         raise ValueError("content_spec must contain exactly 6 pages")
-    hits = [phrase for phrase in FORBIDDEN_PHRASES if phrase in body]
-    if hits:
-        raise ValueError(f"body contains forbidden phrases: {hits}")
-    assert_copy_quality(spec)
+    first_page = pages[0]
+    if not isinstance(first_page, dict):
+        raise ValueError("content_spec.pages[0] must be an object")
+    cover_title = str(first_page.get("title", "")).strip()
+    current_title = str(spec["title"]).strip()
+    if cover_title != current_title:
+        raise ValueError(
+            "cover page title must match current title; refresh pages after writing copy "
+            f"({cover_title!r} != {current_title!r})"
+        )
 
 
 def validate_writing_brief(brief: Any) -> None:
     """Make sure the model-written body is grounded in source-backed facts."""
     if not isinstance(brief, dict):
         raise ValueError("writing_brief must be an object")
-    for key in ["why_now", "creator_angle", "audience"]:
-        if not str(brief.get(key, "")).strip():
-            raise ValueError(f"writing_brief.{key} must be non-empty")
     facts = brief.get("facts")
     if not isinstance(facts, list) or len(facts) < 2:
         raise ValueError("writing_brief.facts must contain at least two source-backed facts")
@@ -131,15 +107,7 @@ def render_fact_summary(spec: dict[str, Any]) -> str:
     for item in brief.get("facts", [])[:4]:
         if isinstance(item, dict):
             fact_lines.append(f"- {item.get('claim', '')} ({item.get('source_url', '')})")
-    return "\n".join(
-        [
-            f"现在为什么写：{brief.get('why_now', '')}",
-            f"博主角度：{brief.get('creator_angle', '')}",
-            f"目标读者：{brief.get('audience', '')}",
-            "事实来源：",
-            *fact_lines,
-        ]
-    )
+    return "\n".join(["事实来源：", *fact_lines])
 
 
 def render_copy(spec: dict[str, Any]) -> str:
@@ -316,7 +284,6 @@ def build_package(spec: dict[str, Any], history_check: dict[str, Any]) -> dict[s
         "body_full": spec["body_full"],
         "body_char_count": len(spec["body_full"]),
         "tags": [str(tag).strip().lstrip("#") for tag in spec["tags"]],
-        "copy_quality": validate_copy_quality(spec),
         "image_slug": spec["image_slug"],
         "images": images,
         "publish_mode": "manual_only",
@@ -337,7 +304,7 @@ def build_package(spec: dict[str, Any], history_check: dict[str, Any]) -> dict[s
         "skill_sources": {
             "topic": "aihot",
             "verification": "agent-reach for official sources, GitHub facts, X posts, papers, and source URLs",
-            "writing": "references/creator_prompt.md + current model direct writing from writing_brief",
+            "writing": "references/creator_prompt.md + current model direct writing from verified facts and writing_brief",
             "image_prompts": "baoyu-image-cards + Codex imagegen",
             "image_style": IMAGE_STYLE,
             "image_defaults": "use workspace .baoyu-skills EXTEND.md non-interactively: no watermark, balanced layout, macaron palette, imagegen backend, --yes/direct defaults",

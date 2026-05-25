@@ -36,16 +36,14 @@ Use this chain for a new post:
 2. **Fact verification**:
    - Use `agent-reach` for official sources, GitHub facts, repo activity, X posts, papers, or source URLs that materially affect the claim.
    - Do not rely on an `aihot` summary alone for concrete factual claims.
-3. **Writing brief**:
-   - Create `writing_brief` as factual input only. It must include source-backed facts, why the topic matters now, the creator angle, target audience, and optional phrases or claims to avoid.
-   - Do not put a numbered outline, fixed framework, formula title, or section plan into `writing_brief`.
+3. **Fact packet**:
+   - Put only the verified facts and source-backed cautions into `writing_brief`.
+   - Keep `writing_brief` as facts and source cautions only.
 4. **Title, body, and tags**:
    - Read `references/creator_prompt.md`.
-   - Read `references/copy_quality_gate.md` and treat it as a hard delivery gate.
-   - Use the current model to generate the final `title`, `body_full`, and `tags` directly from the verified facts and `writing_brief`.
-   - Do not call a separate title formula, copywriting rewrite, humanizer, or report-writing skill for this step.
-   - Privately rewrite if the draft sounds like a report, listicle, product manual, SEO article, or AI summary.
-   - Before image work, run or satisfy the local copy quality gate. If it fails, rewrite the title/body/tags instead of generating images or sending to Feishu.
+   - Send the verified facts, `writing_brief`, and the Xiaohongshu-specific prompt to the current model once to generate the final `title`, `body_full`, and `tags`.
+   - If the user asks for DeepSeek v4 Flash writing, run `python "<workspace>\\asset-generation\\write_copy_deepseek.py"` after the factual `content_spec.json` exists. It reads `DEEPSEEK_API_KEY` from the environment or workspace `.env` and updates `title`, `body_full`, and `tags`.
+   - Do not add any other writing step.
 5. **Image-card structure and prompts**: use `baoyu-image-cards` with the bundled `xhs-warm-cute-open-source` preference.
    - Build the 6 image pages from the final title/body/facts after the body is written. The image-card outline must not rewrite the title or body.
    - For GitHub stars, open-source projects, or repo-based topics, put the verified repo/project name, star count, license/open-source badge, and source cue on the first card. Do not hide these facts in later pages or invent unverified counts.
@@ -68,16 +66,16 @@ Authoritative rule: this skill packages model-generated cards. If any workspace 
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --acquire-automation-lock`
    If the lock is busy, stop and report the active owner instead of continuing. Release it after successful send or a terminal blocker:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --release-automation-lock`
-4. Create `asset-generation/content_spec.json` from the current topic using the chain above. The file must contain the current topic, verified sources, `writing_brief`, final title, final body, tags, image slug, source verification, and exactly 6 image page definitions.
+4. Create `asset-generation/content_spec.json` from the current topic using the chain above. The file must contain the current topic, verified sources, factual `writing_brief`, final title, final body, tags, image slug, source verification, and exactly 6 image page definitions.
 5. Check the current spec against sent history before image work:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-history`
    If it reports `duplicate`, choose a new topic/angle/source. Only set `history.allow_repeat: true` when the user explicitly asks to repeat a topic.
-6. Check the current title/body/tags against the local Xiaohongshu human-creator copy gate:
-   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-copy`
-   If it reports `copy_blocked`, rewrite `title`, `body_full`, and `tags` before continuing. Do not generate images or send Feishu cards for blocked copy.
-7. Run the asset generator first. It writes the copy package and the six prompt files:
+6. When DeepSeek writing is requested, generate the copy before image work:
+   `python "<workspace>\\asset-generation\\write_copy_deepseek.py"`
+7. Refresh `pages` from the final title/body/facts after writing copy. The cover page title must match the final top-level `title`; otherwise asset generation blocks delivery as a stale image-card structure.
+8. Run the asset generator first. It writes the copy package and the six prompt files:
    `python "<workspace>\\asset-generation\\generate_current_assets.py"`
-8. Generate the six image cards with the mature image-card path used by the owner:
+9. Generate the six image cards with the mature image-card path used by the owner:
    use `baoyu-image-cards` to structure the series and Codex `imagegen` as the raster backend.
    If those skills/tools are available in the current runtime, explicitly use them; do not replace them with shell, Python, browser, or canvas code.
    Invoke `baoyu-image-cards` with the workspace `.baoyu-skills/baoyu-image-cards/EXTEND.md` defaults and `--yes` / equivalent direct-default confirmation. Do not pause to ask about watermark text, style, layout, palette, backend, or preference save location.
@@ -85,20 +83,20 @@ Authoritative rule: this skill packages model-generated cards. If any workspace 
    If the user has a different image model available, use that model only if it can save final PNGs to the same paths.
    If a real image model/backend is not available, stop and report that image generation is blocked. Do not create a Python, PIL, SVG, HTML, canvas, screenshot, browser, or placeholder renderer to work around it.
    If generated images are saved outside the workspace by the image tool, copy the selected final PNGs into the required `image_path` locations before packaging.
-9. After all six model-generated PNG files exist, run the wrapper. It must refresh the asset package, build the local package, build the Feishu card, and then validate or send:
+10. After all six model-generated PNG files exist, run the wrapper. It must refresh the asset package, build the local package, build the Feishu card, and then validate or send:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --local-only`
-10. After a machine restart, check Feishu credentials without building or sending:
+11. After a machine restart, check Feishu credentials without building or sending:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-feishu`
-11. Before using the workflow from a new Codex window, run read-only diagnostics:
+12. Before using the workflow from a new Codex window, run read-only diagnostics:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --doctor`
-12. Install a Windows logon health check when the workflow should recover after reboot:
+13. Install a Windows logon health check when the workflow should recover after reboot:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-startup-check`
    If Task Scheduler or the Startup folder is blocked by local permissions, the workspace installer may fall back to the current user's Windows Run registry entry.
    For "machine booted but no user has logged in", install the administrator-only SYSTEM startup task:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-system-startup-check`
-13. If Feishu credentials should be checked after building the package:
+14. If Feishu credentials should be checked after building the package:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --dry-run`
-14. Only when the user explicitly wants delivery to Feishu:
+15. Only when the user explicitly wants delivery to Feishu:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --send`
    A successful send must append or update `content-history/sent-posts.jsonl` with the sent title, topic, source keys, Feishu `message_id`, and send time.
 
@@ -107,10 +105,8 @@ Authoritative rule: this skill packages model-generated cards. If any workspace 
 - Topic must stay in the AI/tools/dev productivity vertical unless the user explicitly changes the niche.
 - `writing_brief` must contain at least two source-backed facts with `claim` and `source_url`.
 - The title must be 20 Chinese characters or fewer.
-- The title must have a Xiaohongshu hook: discovery, pain point, creator judgment, curiosity gap, or mild emotion. Documentation-style titles such as "项目介绍", "使用指南", "是什么", or generic "工具推荐" must be blocked.
 - The body must be 1000 characters or fewer.
 - The body must give the reader a concrete understanding, use case, judgment, or save-worthy detail. It must not be only a news recap or generic reminder.
-- The title/body/tags must pass the local copy quality gate. If the body reads like an AI tool manual, training course, report, or fixed checklist, the workflow must block before image generation and Feishu delivery.
 - GitHub/open-source posts should explain what the project does well, where it is useful, who should save it, and why it is worth trying.
 - AI hot-news posts should turn the event into an understandable implication for AI users, builders, or developers.
 - Tags must be a non-empty list.
@@ -130,7 +126,6 @@ Authoritative rule: this skill packages model-generated cards. If any workspace 
 - For repository structure and every tracked file, read `PROJECT_GUIDE.md`.
 - For the content spec shape, read `references/content_spec.md`.
 - For the model writing prompt, read `references/creator_prompt.md`.
-- For the copy quality hard gate, read `references/copy_quality_gate.md`.
 - For the model-image handoff contract, read `references/image_generation.md`.
 
 ## Validation
@@ -145,7 +140,7 @@ python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-feishu
 python scripts/run_xhs_delivery.py --workspace "<workspace>" --doctor
 python scripts/run_xhs_delivery.py --workspace "<workspace>" --history
 python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-history
-python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-copy
+python "<workspace>\asset-generation\write_copy_deepseek.py"
 python "<workspace>\asset-generation\generate_current_assets.py"
 # Generate the 6 PNG files with baoyu-image-cards/imagegen, then:
 python scripts/run_xhs_delivery.py --workspace "<workspace>" --local-only

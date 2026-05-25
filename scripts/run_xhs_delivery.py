@@ -20,7 +20,6 @@ from pathlib import Path
 BUILD_REQUIRED_FILES = [
     # Files required for local-only, dry-run, and send modes.
     "asset-generation/content_spec.json",
-    "asset-generation/copy_quality.py",
     "asset-generation/generate_current_assets.py",
     "publish-mainline/build_manual_publish_package.py",
     "publish-mainline/preflight.py",
@@ -51,12 +50,6 @@ HISTORY_REQUIRED_FILES = [
     # Sent-post history inspection and duplicate detection.
     "content-history/check_history.py",
     "content-history/history_utils.py",
-]
-
-COPY_REQUIRED_FILES = [
-    # Local Xiaohongshu copy-quality gate.
-    "asset-generation/content_spec.json",
-    "asset-generation/copy_quality.py",
 ]
 
 LOCK_TTL_SECONDS = 2 * 60 * 60
@@ -131,7 +124,6 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--doctor", action="store_true", help="Run read-only workspace diagnostics and write a doctor report")
     mode.add_argument("--history", action="store_true", help="List recent sent Xiaohongshu delivery history")
     mode.add_argument("--check-history", action="store_true", help="Check current content_spec.json against sent history")
-    mode.add_argument("--check-copy", action="store_true", help="Check current title/body/tags against the local copy quality gate")
     mode.add_argument("--install-startup-check", action="store_true", help="Install a Windows logon Feishu health check")
     mode.add_argument("--install-system-startup-check", action="store_true", help="Install a Windows startup health check; requires administrator")
     mode.add_argument("--uninstall-startup-check", action="store_true", help="Remove the Windows logon Feishu health check")
@@ -170,10 +162,6 @@ def main(argv: list[str]) -> int:
     if args.check_history:
         require_files(workspace, HISTORY_REQUIRED_FILES)
         run_step(workspace, "check_history", [sys.executable, ".\\content-history\\check_history.py", "--check-current"])
-        return 0
-    if args.check_copy:
-        require_files(workspace, COPY_REQUIRED_FILES)
-        run_step(workspace, "check_copy", [sys.executable, ".\\asset-generation\\copy_quality.py"])
         return 0
     if args.install_startup_check:
         require_files(workspace, STARTUP_REQUIRED_FILES)
