@@ -4,13 +4,7 @@ The workspace file `asset-generation/content_spec.json` is the single source of 
 
 Use this reference when editing the JSON file by hand. JSON does not support real comments, so explanatory notes live here and in `PROJECT_GUIDE.md`.
 
-Before editing this file for a real post, follow the mature skill chain in
-`SKILL.md`: use `aihot` for AI-topic discovery unless the user already supplied
-a concrete topic/source, use `agent-reach` to verify material facts, classify
-the content type directly, write a short insight pack from the verified facts,
-use `dbs-xhs-title` for title candidates, read `references/editor_prompt.md`
-before writing `body_full` directly with the current model, and use
-`baoyu-image-cards` plus `imagegen` for the final images.
+Before editing this file for a real post, follow the chain in `SKILL.md`: use `aihot` for AI-topic discovery unless the user already supplied a concrete topic/source, use `agent-reach` to verify material facts, create a factual `writing_brief`, read `references/creator_prompt.md`, write the final title/body/tags directly with the current model, then use `baoyu-image-cards` plus `imagegen` for the final images.
 
 Before automatic topic selection, inspect sent history:
 
@@ -24,9 +18,7 @@ For a new workspace, initialize the bundled template first:
 
 `python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`
 
-The template does not include a starter `content_spec.json`. Create that file
-fresh for each real post from the current topic, source facts, and insight pack.
-Do not copy old workspace outputs or old examples as the body source.
+The template does not include a starter `content_spec.json`. Create that file fresh for each real post from the current topic, verified facts, and final model-written copy. Do not copy old workspace outputs or old examples as the body source.
 
 Required fields:
 
@@ -40,13 +32,21 @@ Required fields:
 - `source_verification`: source notes and factual caveats.
 - `project_facts`: optional object for GitHub/open-source topics. Use verified values only; supported keys include `name`, `repo`, `github_stars`, `license`, `open_source`, `url`, and `description`.
 - `history`: optional object for duplicate handling. Use `topic_key` to pin a stable dedupe key. Use `allow_repeat: true` only when the user explicitly asks to repeat a topic.
-- `content_type`: one of `github_project_recommendation`, `ai_product_release`, `ai_industry_shift`, or `ai_technical_breakthrough`.
-- `insight_pack`: required structured insight pack created before writing the body. It is the content brain, not Feishu output.
+- `writing_brief`: required factual brief used by the model to write the final title/body/tags.
 - `body_full`: final Xiaohongshu body, 1000 characters or fewer.
 - `tags`: non-empty tag list, without leading `#`.
-- `title_candidates`: optional title alternatives.
 - `image_slug`: directory name for image prompts and output PNGs.
 - `pages`: exactly 6 image-card page objects.
+
+`writing_brief` must include:
+
+- `facts`: at least two source-backed factual claims, each with `claim` and `source_url`.
+- `why_now`: why this topic matters now.
+- `creator_angle`: the creator's point of view for this post.
+- `audience`: who should read or save this post.
+- `do_not_say`: optional list of phrases, claims, or angles to avoid.
+
+Keep `writing_brief` factual. Do not turn it into a numbered outline, fixed framework, title formula, or section plan.
 
 Each `pages` item must include:
 
@@ -56,53 +56,19 @@ Each `pages` item must include:
 - `visual`: visual direction for the image prompt.
 - `layout`: optional per-card baoyu layout override such as `flow`, `comparison`, `list`, or `balanced`.
 
-`insight_pack` must include:
+Use `references/creator_prompt.md` before writing `body_full`. The body should feel like a real Xiaohongshu AI-tools creator sharing a useful discovery with a point of view.
 
-- `core_hook`: the high-click Xiaohongshu angle.
-- `one_sentence_event`: what happened, in one sentence.
-- `why_it_matters`: why the reader should care.
-- `key_takeaways`: non-empty list of concrete insights.
-- `use_cases`: non-empty list of practical use cases or affected scenarios.
-- `actionable_framework`: object with `name` and non-empty `items` list. This is the save-worthy method, formula, checklist, or judgment framework.
-- `source_facts`: list of at least two source-backed factual claims, each with `claim` and `source_url`.
-- `boundaries`: non-empty list of caveats or scope limits.
-- `reader_payoff`: what the reader can do or understand after reading.
+For GitHub stars, open-source projects, or repo-based topics, fill `project_facts` before generating prompts. The cover prompt will then ask the image model to show the project card, star count, and open-source/license badge on the first image instead of hiding those facts in later cards.
 
-Use `references/editor_prompt.md` before writing `body_full`. The `content_type`
-should guide the angle, but it must not force a rigid numbered template. The
-body should feel like a real Xiaohongshu AI-tools creator sharing a useful
-discovery with a point of view.
+Duplicate detection normalizes GitHub repos and source URLs. For example, `TauricResearch/TradingAgents`, `github.com/TauricResearch/TradingAgents`, and `https://github.com/TauricResearch/TradingAgents` are treated as the same sent topic key. `generate_current_assets.py` blocks duplicates unless `history.allow_repeat` is explicitly true.
 
-Choose the body angle from `content_type`:
-
-- `github_project_recommendation`: discovery, one-sentence value, strengths, use cases, who should save it, why it is worth trying. Default to a positive recommendation tone and do not force risks or drawbacks.
-- `ai_product_release`: what changed, what pain it solves, what is useful, who should try it, how to judge whether it is worth using.
-- `ai_industry_shift`: what happened, what change it signals, how it affects users/developers, and one judgment framework.
-- `ai_technical_breakthrough`: one-sentence explanation, what limitation changed, why it matters, possible applications, and current boundaries.
-
-For GitHub stars, open-source projects, or repo-based topics, fill
-`project_facts` before generating prompts. The cover prompt will then ask the
-image model to show the project card, star count, and open-source/license badge
-on the first image instead of hiding those facts in later cards.
-
-Duplicate detection normalizes GitHub repos and source URLs. For example,
-`TauricResearch/TradingAgents`, `github.com/TauricResearch/TradingAgents`, and
-`https://github.com/TauricResearch/TradingAgents` are treated as the same sent
-topic key. `generate_current_assets.py` blocks duplicates unless
-`history.allow_repeat` is explicitly true.
-
-The workflow writes prompt files from `content_spec.json`. Codex should then use
-`baoyu-image-cards` / `imagegen` to generate the final PNG files before
-packaging:
+The workflow writes prompt files from `content_spec.json`. Codex should then use `baoyu-image-cards` / `imagegen` to generate the final PNG files before packaging:
 
 `image-generation/outputs/images/<image_slug>/<page_id>.png`
 
-Use the workspace `.baoyu-skills/baoyu-image-cards/EXTEND.md` defaults directly
-when generating images: no watermark, `xhs-warm-cute-open-source`, balanced
-layout, macaron palette, Codex `imagegen`, and no extra preference questions.
+Use the workspace `.baoyu-skills/baoyu-image-cards/EXTEND.md` defaults directly when generating images: no watermark, `xhs-warm-cute-open-source`, balanced layout, macaron palette, Codex `imagegen`, and no extra preference questions.
 
-Do not use a local drawing script, PIL renderer, SVG, HTML, or canvas output as
-the final image-card source.
+Do not use a local drawing script, PIL renderer, SVG, HTML, or canvas output as the final image-card source.
 
 Do not add music fields, auto-publish fields, Xiaohongshu login fields, or analytics fields.
 

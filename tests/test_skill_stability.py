@@ -1,7 +1,7 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
-import json
 import importlib.util
+import json
 import os
 import subprocess
 import sys
@@ -11,6 +11,16 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def legacy_terms() -> list[str]:
+    return [
+        "dbs-" + "xhs-title",
+        "insight" + "_pack",
+        "actionable" + "_framework",
+        "title" + "_candidates",
+        "editor" + "_prompt",
+    ]
 
 
 def run(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -31,37 +41,34 @@ def write_smoke_spec(workspace: Path) -> dict:
         "content_id": "smoke-ai-tool-evaluation",
         "title": "Smoke Test",
         "topic": "Smoke test topic",
-        "content_type": "ai_product_release",
         "summary": "Smoke test fixture for packaging.",
         "hot_source": "smoke-test",
         "source_urls": ["https://example.com/ai-tool", "https://example.com/ai-tool-docs"],
-        "source_verification": {"source": "smoke test fixture", "checked_at": "2026-05-25T00:00:00+08:00"},
-        "insight_pack": {
-            "core_hook": "Smoke hook for packaging.",
-            "one_sentence_event": "Smoke event for packaging.",
-            "why_it_matters": "Smoke reason for packaging.",
-            "key_takeaways": ["Smoke takeaway one", "Smoke takeaway two", "Smoke takeaway three"],
-            "use_cases": ["Smoke use case one", "Smoke use case two"],
-            "actionable_framework": {
-                "name": "Smoke framework",
-                "items": ["Smoke item one", "Smoke item two"],
-            },
-            "source_facts": [
+        "source_verification": {
+            "source": "smoke test fixture",
+            "checked_at": "2026-05-25T00:00:00+08:00",
+        },
+        "writing_brief": {
+            "facts": [
                 {"claim": "Smoke fact one.", "source_url": "https://example.com/ai-tool"},
                 {"claim": "Smoke fact two.", "source_url": "https://example.com/ai-tool-docs"},
             ],
-            "boundaries": ["Smoke boundary one", "Smoke boundary two"],
-            "reader_payoff": "Smoke payoff for packaging.",
+            "why_now": "Smoke reason for writing now.",
+            "creator_angle": "Write like a Xiaohongshu AI tools creator sharing one useful discovery.",
+            "audience": "AI tool users and indie builders.",
+            "do_not_say": ["Do not use formula-title language."],
         },
         "project_facts": {},
-        "title_candidates": [
-            {"title": "Smoke Test", "type": "反差", "reason": "强调演示和真实使用之间的落差"}
-        ],
         "body_full": "SMOKE TEST BODY. Fixture only. Do not use as Xiaohongshu copywriting guidance.",
         "tags": ["smoke", "test", "fixture"],
         "image_slug": "smoke-test",
         "pages": [
-            {"page_id": "01-cover", "title": "Smoke Test", "subtitle": "先看能不能进流程", "visual": "A creator comparing a shiny demo screen with a real work desk."},
+            {
+                "page_id": "01-cover",
+                "title": "Smoke Test",
+                "subtitle": "先看能不能进流程",
+                "visual": "A creator comparing a shiny demo screen with a real work desk.",
+            },
             {"page_id": "02-gap", "title": "Smoke Page 2", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
             {"page_id": "03-task", "title": "Smoke Page 3", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
             {"page_id": "04-output", "title": "Smoke Page 4", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
@@ -76,15 +83,14 @@ def write_smoke_spec(workspace: Path) -> dict:
 
 
 class SkillStabilityTests(unittest.TestCase):
-    def test_skill_md_declares_mature_skill_chain(self) -> None:
+    def test_skill_md_declares_clean_model_writing_chain(self) -> None:
         text = (ROOT / "SKILL.md").read_text(encoding="utf-8")
         for marker in [
-            "Required Mature Skill Chain",
+            "Mature Research + Model Writing Chain",
             "aihot",
             "agent-reach",
-            "insight_pack",
-            "dbs-xhs-title",
-            "references/editor_prompt.md",
+            "writing_brief",
+            "references/creator_prompt.md",
             "baoyu-image-cards",
             "imagegen",
             "Do not invent a hot topic",
@@ -95,20 +101,25 @@ class SkillStabilityTests(unittest.TestCase):
             "--yes",
         ]:
             self.assertIn(marker, text)
+        for term in legacy_terms():
+            self.assertNotIn(term, text)
 
-    def test_editor_prompt_enforces_natural_creator_voice(self) -> None:
-        text = (ROOT / "references" / "editor_prompt.md").read_text(encoding="utf-8")
+    def test_creator_prompt_is_the_only_copy_prompt(self) -> None:
+        prompt_path = ROOT / "references" / "creator_prompt.md"
+        self.assertTrue(prompt_path.exists())
+        self.assertFalse((ROOT / "references" / ("editor" + "_prompt.md")).exists())
+        text = prompt_path.read_text(encoding="utf-8")
         for marker in [
-            "真人博主",
-            "不要把干货写成清单模板",
-            "工具说明书",
+            "像一个真的小红书 AI 博主",
+            "标题和正文都直接生成最终稿",
+            "不要先套公式",
+            "不要写成三点清单",
+            "读完要有具体收获",
             "如果读起来像 AI 在解释，请重写",
-            "它做的事很直接",
-            "这个数据仅是一个参考",
-            "我会把它放在三个场景里用",
-            "Accepted Voice Target",
         ]:
             self.assertIn(marker, text)
+        for term in legacy_terms():
+            self.assertNotIn(term, text)
 
     def test_image_generation_contract_uses_noninteractive_baoyu_defaults(self) -> None:
         text = (ROOT / "references" / "image_generation.md").read_text(encoding="utf-8")
@@ -156,7 +167,7 @@ class SkillStabilityTests(unittest.TestCase):
             release = run([sys.executable, str(lock_script), "--release", "--owner", "first"], cwd=workspace)
             self.assertEqual(release.returncode, 0, release.stderr)
 
-    def test_generate_assets_records_chain_and_cover_prompt(self) -> None:
+    def test_generate_assets_records_model_writing_chain_and_cover_prompt(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp) / "workspace"
             init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
@@ -171,6 +182,10 @@ class SkillStabilityTests(unittest.TestCase):
                 "open_source": "true",
             }
             spec["source_urls"] = ["https://github.com/vercel/ai"]
+            spec["writing_brief"]["facts"] = [
+                {"claim": "models.dev lists AI model API metadata.", "source_url": "https://github.com/vercel/ai"},
+                {"claim": "The project is open source.", "source_url": "https://github.com/vercel/ai"},
+            ]
             spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
             self.assertEqual(generated.returncode, 0, generated.stderr)
@@ -182,14 +197,15 @@ class SkillStabilityTests(unittest.TestCase):
             for marker in [
                 "aihot",
                 "agent-reach",
-                "dbs-xhs-title",
-                "editor_prompt",
+                "creator_prompt.md",
                 "baoyu-image-cards",
                 "imagegen",
                 "image_defaults",
                 "--yes",
             ]:
                 self.assertIn(marker, source_text)
+            for term in legacy_terms():
+                self.assertNotIn(term, json.dumps(package, ensure_ascii=False))
 
             prompt = (
                 workspace
@@ -207,19 +223,18 @@ class SkillStabilityTests(unittest.TestCase):
             copy = (
                 workspace / "asset-generation" / "outputs" / "current-copy.md"
             ).read_text(encoding="utf-8")
-            self.assertIn("洞察包摘要", copy)
-            self.assertIn("内容类型：ai_product_release", copy)
-            self.assertEqual(package["content_type"], "ai_product_release")
-            self.assertIn("insight_pack", package)
+            self.assertIn("事实素材摘要", copy)
+            self.assertNotIn("洞察包摘要", copy)
+            self.assertIn("writing_brief", package)
 
-    def test_generate_assets_rejects_missing_insight_pack(self) -> None:
+    def test_generate_assets_rejects_missing_writing_brief(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp) / "workspace"
             init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
             self.assertEqual(init.returncode, 0, init.stderr)
             spec_path = workspace / "asset-generation" / "content_spec.json"
             spec = write_smoke_spec(workspace)
-            spec.pop("insight_pack", None)
+            spec.pop("writing_brief", None)
             spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
             generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
@@ -233,14 +248,14 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertEqual(init.returncode, 0, init.stderr)
             spec_path = workspace / "asset-generation" / "content_spec.json"
             spec = write_smoke_spec(workspace)
-            spec["insight_pack"]["source_facts"] = [
-                {"claim": "只有一条来源事实。", "source_url": "https://example.com/source"}
+            spec["writing_brief"]["facts"] = [
+                {"claim": "Only one source-backed fact.", "source_url": "https://example.com/source"}
             ]
             spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
             generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
             self.assertNotEqual(generated.returncode, 0)
-            self.assertIn("source_facts", generated.stderr + generated.stdout)
+            self.assertIn("writing_brief.facts", generated.stderr + generated.stdout)
 
     def test_generate_assets_rejects_template_voice(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -286,7 +301,6 @@ class SkillStabilityTests(unittest.TestCase):
                         "content_id": "tradingagents-old",
                         "title": "旧标题",
                         "topic": "TradingAgents",
-                        "content_type": "github_project_recommendation",
                         "topic_key": "github.com/tauricresearch/tradingagents",
                         "source_keys": ["github.com/tauricresearch/tradingagents"],
                         "sent_at": "2026-05-24T12:00:00+08:00",
@@ -299,7 +313,6 @@ class SkillStabilityTests(unittest.TestCase):
 
             spec_path = workspace / "asset-generation" / "content_spec.json"
             spec = write_smoke_spec(workspace)
-            spec["content_type"] = "github_project_recommendation"
             spec["topic"] = "TradingAgents 开源项目"
             spec["project_facts"] = {
                 "name": "TradingAgents",
@@ -316,7 +329,7 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertIn("duplicate content history", generated.stderr + generated.stdout)
             self.assertIn("github.com/tauricresearch/tradingagents", generated.stderr + generated.stdout)
 
-    def test_history_normalizes_non_github_urls_without_fake_repo(self) -> None:
+    def test_history_reads_source_keys_from_writing_brief(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp) / "workspace"
             init = run([sys.executable, str(ROOT / "scripts" / "init_workspace.py"), "--workspace", str(workspace)])
@@ -342,14 +355,21 @@ class SkillStabilityTests(unittest.TestCase):
             )
             source_keys = module.source_keys_from_spec(
                 {
-                    "content_type": "github_project_recommendation",
                     "topic": "TradingAgents",
                     "source_urls": ["https://github.com/TauricResearch/TradingAgents"],
                     "source_verification": {"source": "GitHub CLI/API, repository README"},
-                    "insight_pack": {"source_facts": []},
+                    "writing_brief": {
+                        "facts": [
+                            {
+                                "claim": "TradingAgents is a GitHub project.",
+                                "source_url": "https://github.com/TauricResearch/TradingAgents",
+                            }
+                        ]
+                    },
                 }
             )
             self.assertFalse(any("github cli" in key for key in source_keys))
+            self.assertIn("github.com/tauricresearch/tradingagents", source_keys)
 
     def test_send_records_successful_delivery_in_history(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -482,4 +502,3 @@ class SkillStabilityTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

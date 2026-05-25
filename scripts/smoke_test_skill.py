@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Smoke-test an installed or local xhs-feishu-delivery skill directory.
 
 The smoke test creates a temporary workspace, initializes it from the skill,
@@ -21,13 +21,22 @@ from typing import Any
 EXPECTED_MARKERS = [
     "aihot",
     "agent-reach",
-    "dbs-xhs-title",
-    "editor_prompt",
+    "creator_prompt.md",
     "baoyu-image-cards",
     "imagegen",
 ]
 
 EXPECTED_IMAGE_STYLE = "xhs-warm-cute-open-source"
+
+
+def legacy_terms() -> list[str]:
+    return [
+        "dbs-" + "xhs-title",
+        "insight" + "_pack",
+        "actionable" + "_framework",
+        "title" + "_candidates",
+        "editor" + "_prompt",
+    ]
 
 
 def run(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -56,32 +65,21 @@ def write_smoke_spec(workspace: Path) -> None:
         "content_id": "smoke-ai-tool-evaluation",
         "title": "Smoke Test",
         "topic": "Smoke test topic",
-        "content_type": "ai_product_release",
         "summary": "Smoke test fixture for packaging.",
         "hot_source": "smoke-test",
         "source_urls": ["https://example.com/ai-tool", "https://example.com/ai-tool-docs"],
         "source_verification": {"source": "smoke test fixture", "checked_at": "2026-05-25T00:00:00+08:00"},
-        "insight_pack": {
-            "core_hook": "Smoke hook for packaging.",
-            "one_sentence_event": "Smoke event for packaging.",
-            "why_it_matters": "Smoke reason for packaging.",
-            "key_takeaways": ["Smoke takeaway one", "Smoke takeaway two", "Smoke takeaway three"],
-            "use_cases": ["Smoke use case one", "Smoke use case two"],
-            "actionable_framework": {
-                "name": "Smoke framework",
-                "items": ["Smoke item one", "Smoke item two"],
-            },
-            "source_facts": [
+        "writing_brief": {
+            "facts": [
                 {"claim": "Smoke fact one.", "source_url": "https://example.com/ai-tool"},
                 {"claim": "Smoke fact two.", "source_url": "https://example.com/ai-tool-docs"},
             ],
-            "boundaries": ["Smoke boundary one", "Smoke boundary two"],
-            "reader_payoff": "Smoke payoff for packaging.",
+            "why_now": "Smoke reason for writing now.",
+            "creator_angle": "Write like a Xiaohongshu AI tools creator sharing one useful discovery.",
+            "audience": "AI tool users and indie builders.",
+            "do_not_say": ["Do not use formula-title language."],
         },
         "project_facts": {},
-        "title_candidates": [
-            {"title": "Smoke Test", "type": "反差", "reason": "强调演示和真实使用之间的落差"}
-        ],
         "body_full": "SMOKE TEST BODY. Fixture only. Do not use as Xiaohongshu copywriting guidance.",
         "tags": ["smoke", "test", "fixture"],
         "image_slug": "smoke-test",
@@ -143,6 +141,9 @@ def smoke_test(skill_dir: Path, keep_workspace: bool) -> tuple[dict[str, Any], i
             source_text = json.dumps(package.get("skill_sources", {}), ensure_ascii=False)
             for marker in EXPECTED_MARKERS:
                 assert_ok(marker in source_text, failures, f"skill_marker_missing:{marker}")
+            package_text = json.dumps(package, ensure_ascii=False)
+            for term in legacy_terms():
+                assert_ok(term not in package_text, failures, f"legacy_term_found:{term}")
 
         assert_ok(cover_prompt.exists(), failures, "cover_prompt_missing")
         if cover_prompt.exists():
@@ -184,4 +185,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

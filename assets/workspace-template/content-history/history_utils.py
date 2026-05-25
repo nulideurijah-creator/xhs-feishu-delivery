@@ -115,11 +115,11 @@ def source_keys_from_spec(spec: dict[str, Any]) -> list[str]:
     for value in spec.get("source_urls", []) if isinstance(spec.get("source_urls"), list) else []:
         _append_unique(keys, normalize_source_url(value))
 
-    insight_pack = spec.get("insight_pack")
-    if isinstance(insight_pack, dict):
-        source_facts = insight_pack.get("source_facts")
-        if isinstance(source_facts, list):
-            for fact in source_facts:
+    writing_brief = spec.get("writing_brief")
+    if isinstance(writing_brief, dict):
+        facts = writing_brief.get("facts")
+        if isinstance(facts, list):
+            for fact in facts:
                 if isinstance(fact, dict):
                     _append_unique(keys, normalize_source_url(fact.get("source_url")))
 

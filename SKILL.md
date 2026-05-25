@@ -7,7 +7,7 @@ metadata:
 
 # XHS Feishu Delivery
 
-Use this skill to operate the local workflow that creates a Xiaohongshu image-text content package and sends the complete package to Feishu for manual posting.
+Use this skill to create one AI/tools/dev Xiaohongshu image-text content package and deliver the complete manual posting package to Feishu.
 
 ## Safety Rules
 
@@ -17,13 +17,11 @@ Use this skill to operate the local workflow that creates a Xiaohongshu image-te
 - Do not add Feishu buttons, callbacks, WebSocket receivers, or approval state machines.
 - Do not include music fields.
 - Do not treat this workflow as data analytics, Obsidian memory, competitor analysis, or self-improvement tracking.
-- Do not replace the mature skill chain with ad hoc model guesses when a listed skill is available.
 - Do not ask the user to choose image watermark, visual style, layout, palette, image backend, or preference save scope. This workflow already pins those choices in `.baoyu-skills/baoyu-image-cards/EXTEND.md`.
 
-## Required Mature Skill Chain
+## Mature Research + Model Writing Chain
 
-This skill is the orchestrator and delivery layer. It must reuse the mature
-skills agreed for the owner's workflow instead of inventing substitutes.
+This skill is the orchestrator and delivery layer. It keeps research and image generation on the agreed mature skills, but title and body are written directly by the current model from a clean factual brief.
 
 Use this chain for a new post:
 
@@ -38,35 +36,27 @@ Use this chain for a new post:
 2. **Fact verification**:
    - Use `agent-reach` for official sources, GitHub facts, repo activity, X posts, papers, or source URLs that materially affect the claim.
    - Do not rely on an `aihot` summary alone for concrete factual claims.
-3. **Content type and insight pack**:
-   - Classify the post directly as one of:
-     `github_project_recommendation`, `ai_product_release`, `ai_industry_shift`, or `ai_technical_breakthrough`.
-   - Write the `insight_pack` directly from the verified facts before writing the body. Do not invoke a separate analysis/report skill for this step.
-   - The insight pack is a short planning object, not a visible template. It must contain the hook, event, importance, takeaways, use cases, actionable framework, source facts, boundaries, and reader payoff.
-4. **Title candidates**: use `dbs-xhs-title` style rules for Xiaohongshu title formulas and candidates.
-5. **Body copy**:
-   - Read `references/editor_prompt.md` before writing `body_full`.
-   - Use the accepted voice target in `references/editor_prompt.md` as the style anchor.
-   - Write `body_full` directly with the current model from the verified facts and insight pack.
-   - Do not invoke any separate copywriting rewrite skill. Extra copy layers can reintroduce template voice.
-   - Before finalizing, privately rewrite once if the draft sounds like a tool-review template, checklist, product manual, or source recap.
-   - The final body should sound like a real AI-tools Xiaohongshu creator sharing a useful discovery, not a report, listicle, product manual, or training handout.
-6. **Image-card structure and prompts**: use `baoyu-image-cards` with the bundled `xhs-warm-cute-open-source` preference.
+3. **Writing brief**:
+   - Create `writing_brief` as factual input only. It must include source-backed facts, why the topic matters now, the creator angle, target audience, and optional phrases or claims to avoid.
+   - Do not put a numbered outline, fixed framework, formula title, or section plan into `writing_brief`.
+4. **Title, body, and tags**:
+   - Read `references/creator_prompt.md`.
+   - Use the current model to generate the final `title`, `body_full`, and `tags` directly from the verified facts and `writing_brief`.
+   - Do not call a separate title formula, copywriting rewrite, humanizer, or report-writing skill for this step.
+   - Privately rewrite once if the draft sounds like a report, listicle, product manual, SEO article, or AI summary.
+5. **Image-card structure and prompts**: use `baoyu-image-cards` with the bundled `xhs-warm-cute-open-source` preference.
+   - Build the 6 image pages from the final title/body/facts after the body is written. The image-card outline must not rewrite the title or body.
    - For GitHub stars, open-source projects, or repo-based topics, put the verified repo/project name, star count, license/open-source badge, and source cue on the first card. Do not hide these facts in later pages or invent unverified counts.
    - Use the bundled defaults non-interactively: no watermark, style `xhs-warm-cute-open-source`, layout `balanced`, palette `macaron`, backend `imagegen`, batch size `4`, and confirmation skipped with `--yes` or the runtime's equivalent "use defaults directly" instruction.
    - If `baoyu-image-cards` asks first-use preference questions, answer them from the bundled config instead of asking the user.
-7. **Final PNG generation**: use Codex `imagegen` or the user's equivalent real image model as the raster backend.
-8. **Packaging and Feishu delivery**: use this `xhs-feishu-delivery` workflow.
+6. **Final PNG generation**: use Codex `imagegen` or the user's equivalent real image model as the raster backend.
+7. **Packaging and Feishu delivery**: use this `xhs-feishu-delivery` workflow.
 
-If any required mature skill is unavailable in the current runtime, stop and
-state exactly which skill is missing. Do not silently replace it with shell
-scripts, browser screenshots, generic writing, or template rendering.
+If `aihot`, `agent-reach`, `baoyu-image-cards`, or `imagegen` is unavailable in the current runtime, stop and state exactly which skill is missing. Do not silently replace it with shell scripts, browser screenshots, generic web guesses, or template rendering.
 
 ## Workflow
 
-Authoritative rule: this skill packages model-generated cards. If any workspace
-note, old handoff, old script, or previous conversation says to create or run a
-local image renderer, treat that instruction as obsolete.
+Authoritative rule: this skill packages model-generated cards. If any workspace note, old handoff, old script, or previous conversation says to create or run a local image renderer, treat that instruction as obsolete.
 
 1. Confirm or create the target workspace. For a new workspace, initialize it from the bundled template:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`
@@ -76,7 +66,7 @@ local image renderer, treat that instruction as obsolete.
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --acquire-automation-lock`
    If the lock is busy, stop and report the active owner instead of continuing. Release it after successful send or a terminal blocker:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --release-automation-lock`
-4. Create `asset-generation/content_spec.json` from the current topic using the Required Mature Skill Chain above. The template intentionally does not ship a starter post, so do not reuse old workspace output or old examples as copy. The file must contain the current topic, `content_type`, `insight_pack`, title, body, tags, image slug, source verification, and exactly 6 image page definitions.
+4. Create `asset-generation/content_spec.json` from the current topic using the chain above. The file must contain the current topic, verified sources, `writing_brief`, final title, final body, tags, image slug, source verification, and exactly 6 image page definitions.
 5. Check the current spec against sent history before image work:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-history`
    If it reports `duplicate`, choose a new topic/angle/source. Only set `history.allow_repeat: true` when the user explicitly asks to repeat a topic.
@@ -110,15 +100,12 @@ local image renderer, treat that instruction as obsolete.
 ## Content Standards
 
 - Topic must stay in the AI/tools/dev productivity vertical unless the user explicitly changes the niche.
-- `content_type` must be one of `github_project_recommendation`, `ai_product_release`, `ai_industry_shift`, or `ai_technical_breakthrough`.
-- `insight_pack` must exist before the body is written and must include:
-  `core_hook`, `one_sentence_event`, `why_it_matters`, `key_takeaways`, `use_cases`, `actionable_framework`, `source_facts`, `boundaries`, and `reader_payoff`.
-- The body must deliver at least one concrete method, formula, checklist, use case, or judgment framework. It must not be only a news recap or generic reminder.
-- GitHub/open-source posts must default to a positive discovery/recommendation tone: explain what the project does well, where it is useful, who should save it, and why it is worth trying.
-- AI hot-news posts must turn the event into a reusable judgment: what happened, why it matters, who it affects, and how the reader should evaluate similar events.
-- The body must follow `references/editor_prompt.md`: no rigid "first/second/third" structure, no product-manual tone, no generic "worth watching" language, and no forced risk section for positive GitHub recommendations.
-- Title must be 20 Chinese characters or fewer.
-- Body must be 1000 characters or fewer.
+- `writing_brief` must contain at least two source-backed facts with `claim` and `source_url`.
+- The title must be 20 Chinese characters or fewer.
+- The body must be 1000 characters or fewer.
+- The body must give the reader a concrete understanding, use case, judgment, or save-worthy detail. It must not be only a news recap or generic reminder.
+- GitHub/open-source posts should explain what the project does well, where it is useful, who should save it, and why it is worth trying.
+- AI hot-news posts should turn the event into an understandable implication for AI users, builders, or developers.
 - Tags must be a non-empty list.
 - Image cards must be exactly 6 PNG files generated by an image model/skill.
 - Do not create image cards with PIL, SVG, HTML, canvas, template drawing scripts, or placeholder diagrams.
@@ -135,6 +122,7 @@ local image renderer, treat that instruction as obsolete.
 
 - For repository structure and every tracked file, read `PROJECT_GUIDE.md`.
 - For the content spec shape, read `references/content_spec.md`.
+- For the model writing prompt, read `references/creator_prompt.md`.
 - For the model-image handoff contract, read `references/image_generation.md`.
 
 ## Validation

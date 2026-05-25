@@ -42,6 +42,11 @@ FORBIDDEN_TEXT = [
     "render_image_cards",
     "image-generation/render_current_cards.py",
     "账号收到小红书 AI 使用违规警报",
+    "-".join(["dbs", "xhs-title"]),
+    "insight" + "_pack",
+    "actionable" + "_framework",
+    "title" + "_candidates",
+    "editor" + "_prompt",
 ]
 
 TEXT_EXTENSIONS = {
