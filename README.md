@@ -13,12 +13,9 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, browser co
 - A wrapper for initialization, diagnostics, Feishu checks, packaging, local validation, and sending.
 - A DeepSeek-only article writer using `references/creator_prompt.md`.
 - A mandatory DeepSeek v4 Flash writer that updates `title`, `body_full`, and `tags` from the verified factual spec.
-- A Windows on-demand DeepSeek writer task for unattended automations where the Codex background process cannot open model API sockets directly.
 - A model-image handoff using `baoyu-image-cards` and Codex `imagegen`.
 - A bundled `xhs-warm-cute-open-source` visual style for warm cute Xiaohongshu AI cards with visible GitHub/open-source facts on repo-based covers.
 - Workspace-local sent history that records successful Feishu deliveries and blocks repeated topics.
-- A workflow lock for unattended Codex automations.
-- A Windows pending sender for unattended runs where the Codex automation background process cannot open Feishu sockets directly.
 - Safety checks that prevent accidental Xiaohongshu automation or secret leakage.
 
 ## Mental Model
@@ -139,17 +136,6 @@ python .\asset-generation\write_copy_deepseek.py
 python .\asset-generation\write_image_prompts_deepseek.py
 ```
 
-For unattended Codex automations on Windows, use the local on-demand writer task
-instead of direct Python network calls:
-
-```powershell
-python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --install-deepseek-writers
-python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --trigger-deepseek-writers
-python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --deepseek-writers-status
-```
-
-The `XHS-DeepSeek-Writers` task has no timer. It runs only when triggered.
-
 6. Generate copy output and baoyu-wrapped image prompt files:
 
 ```powershell
@@ -179,30 +165,6 @@ python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_deliv
 ```powershell
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --send
 ```
-
-## Unattended Feishu Sending
-
-On some Windows desktops, interactive Python can reach Feishu while Codex
-background automations are blocked by `WinError 10013` when opening sockets to
-`open.feishu.cn`. For unattended automations, install the local pending sender:
-
-```powershell
-python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --install-pending-sender
-```
-
-Then the Codex automation should run `--local-only`, release the automation
-lock, and queue the package for the Windows sender:
-
-```powershell
-python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --queue-send
-python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --release-automation-lock
-python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --trigger-pending-sender
-```
-
-The scheduled task has no timer. It runs only when triggered by
-`--trigger-pending-sender`, calls `--send-pending`, records the same
-`content-history\sent-posts.jsonl` success entry as direct `--send`, and leaves
-the pending marker in place if Feishu is temporarily down.
 
 ## content_spec.json Shape
 
@@ -290,20 +252,6 @@ Duplicate detection normalizes GitHub repos and source URLs. To intentionally re
     "topic_key": "custom-topic-key"
   }
 }
-```
-
-## Startup Check
-
-Recommended desktop setup:
-
-```powershell
-python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --install-startup-check
-```
-
-Machine-startup before any user logs in requires administrator permissions:
-
-```powershell
-python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --install-system-startup-check
 ```
 
 ## Common Checks

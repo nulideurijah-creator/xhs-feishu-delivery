@@ -41,12 +41,9 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | `assets/workspace-template/.baoyu-skills/baoyu-image-cards/EXTEND.md` | Bundled `baoyu-image-cards` preference file. It disables watermarks, pins Codex image generation, and defines the `xhs-warm-cute-open-source` style. |
 | `assets/workspace-template/requirements.txt` | Python dependency list for the generated workspace. It is intentionally empty by default because final cards are model-generated, not drawn locally. |
 | `assets/workspace-template/run_xhs_delivery.py` | Workspace-local packaging and Feishu runner. It mirrors the skill wrapper but does not require `--workspace`. |
-| `assets/workspace-template/automation-lock/automation_lock.py` | Whole-workflow lock for unattended Codex automations. |
 | `assets/workspace-template/asset-generation/generate_current_assets.py` | Validates the spec, wraps DeepSeek image prompt plans with fixed baoyu metadata, writes copy/prompt outputs, and prepares image paths for model-generated cards. |
 | `assets/workspace-template/asset-generation/write_copy_deepseek.py` | Mandatory DeepSeek v4 Flash writer for `title`, `body_full`, and `tags`; reads `DEEPSEEK_API_KEY` from workspace `.env` or the environment and records `copy_generation.provider=deepseek`. |
 | `assets/workspace-template/asset-generation/write_image_prompts_deepseek.py` | Mandatory DeepSeek writer for the six image-card `image_prompt_plan` objects; records `image_prompt_generation.provider=deepseek` and blocks fallback to old prompt templates. |
-| `assets/workspace-template/asset-generation/run_deepseek_writers.py` | Runs the copy writer and image prompt writer as one local step and writes status for automation polling. |
-| `assets/workspace-template/asset-generation/install_deepseek_writer_task.py` | Installs and manages the on-demand Windows task that runs DeepSeek writers outside Codex automation networking. |
 | `assets/workspace-template/content-history/check_history.py` | Lists sent post history and checks the current spec against previous Feishu deliveries. |
 | `assets/workspace-template/content-history/history_utils.py` | Shared duplicate-key normalization, history read/write, and sent-record helpers. |
 | `assets/workspace-template/diagnostics/doctor.py` | Read-only workspace doctor. It writes diagnostics reports without sending Feishu messages or generating images. |
@@ -55,11 +52,8 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | `assets/workspace-template/publish-mainline/preflight.py` | Checks whether the manual package is ready and records any blocking issues. |
 | `assets/workspace-template/feishu-delivery/.env.example` | Template for Feishu credentials. Copy it to `.env` and fill in local values. |
 | `assets/workspace-template/feishu-delivery/check_feishu_ready.py` | Checks Feishu credentials and token access without sending messages. |
-| `assets/workspace-template/feishu-delivery/install_startup_check.py` | Installs Windows startup health checks for Feishu readiness. |
-| `assets/workspace-template/feishu-delivery/install_pending_sender.py` | Installs and manages the Windows scheduled task that sends queued Feishu packages outside Codex automation networking. |
 | `assets/workspace-template/feishu-delivery/build_delivery_card.py` | Builds the buttonless Feishu interactive card JSON. |
 | `assets/workspace-template/feishu-delivery/send_delivery_card.py` | Validates locally, performs dry-runs, uploads images, and sends the final Feishu card. |
-| `assets/workspace-template/feishu-delivery/send_pending_delivery.py` | Queues a validated local package, lets the scheduled sender deliver it, and records pending-send status/history. |
 
 ## GitHub Automation
 

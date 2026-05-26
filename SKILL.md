@@ -66,24 +66,16 @@ Authoritative rule: this skill packages model-generated cards. If any workspace 
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --init-workspace`
 2. The target workspace must contain the four workflow directories:
    `asset-generation`, `image-generation`, `publish-mainline`, and `feishu-delivery`.
-3. For unattended Codex automations, acquire the whole-workflow lock before editing any workspace file:
-   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --acquire-automation-lock`
-   If the lock is busy, stop and report the active owner instead of continuing. Release it after successful send or a terminal blocker:
-   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --release-automation-lock`
-4. Create `asset-generation/content_spec.json` from the current topic using the chain above. Before DeepSeek writing, the file must contain the current topic, verified sources, factual `writing_brief`, source verification, image slug, and exactly 6 image page ids/layouts. After DeepSeek copy writing, it must also contain final title, final body, tags, and `copy_generation.provider=deepseek`. After DeepSeek image prompt writing, every page must contain `image_prompt_plan`, and the spec must include `image_prompt_generation.provider=deepseek`.
-5. Check the current spec against sent history before image work:
+3. Create `asset-generation/content_spec.json` from the current topic using the chain above. Before DeepSeek writing, the file must contain the current topic, verified sources, factual `writing_brief`, source verification, image slug, and exactly 6 image page ids/layouts. After DeepSeek copy writing, it must also contain final title, final body, tags, and `copy_generation.provider=deepseek`. After DeepSeek image prompt writing, every page must contain `image_prompt_plan`, and the spec must include `image_prompt_generation.provider=deepseek`.
+4. Check the current spec against sent history before image work:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-history`
    If it reports `duplicate`, choose a new topic/angle/source. Only set `history.allow_repeat: true` when the user explicitly asks to repeat a topic.
-6. For unattended Codex automations on Windows, install and use the local on-demand DeepSeek writer task because Codex background Python can be denied direct socket access with `WinError 10013`:
-   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-deepseek-writers`
-   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --trigger-deepseek-writers`
-   Poll until `python scripts/run_xhs_delivery.py --workspace "<workspace>" --deepseek-writers-status` reports `status: completed`, `copy_ready: true`, and `image_prompts_ready: true`. The task is on-demand only and has no timer.
-7. In an interactive non-automation run where local Python network access is known to work, direct DeepSeek writing is also valid:
+5. Run the DeepSeek writers directly after the factual spec exists:
    `python "<workspace>\\asset-generation\\write_copy_deepseek.py"`
    `python "<workspace>\\asset-generation\\write_image_prompts_deepseek.py"`
-8. Run the asset generator first. It validates the DeepSeek prompt-plan metadata, writes the copy package, and writes the six baoyu-wrapped prompt files:
+6. Run the asset generator first. It validates the DeepSeek prompt-plan metadata, writes the copy package, and writes the six baoyu-wrapped prompt files:
    `python "<workspace>\\asset-generation\\generate_current_assets.py"`
-9. Generate the six image cards with the mature image-card path used by the owner:
+7. Generate the six image cards with the mature image-card path used by the owner:
    use `baoyu-image-cards` to structure the series and Codex `imagegen` as the raster backend.
    If those skills/tools are available in the current runtime, explicitly use them; do not replace them with shell, Python, browser, or canvas code.
    Invoke `baoyu-image-cards` with the workspace `.baoyu-skills/baoyu-image-cards/EXTEND.md` defaults and `--yes` / equivalent direct-default confirmation. Do not pause to ask about watermark text, style, layout, palette, backend, or preference save location.
@@ -91,27 +83,15 @@ Authoritative rule: this skill packages model-generated cards. If any workspace 
    If the user has a different image model available, use that model only if it can save final PNGs to the same paths.
    If a real image model/backend is not available, stop and report that image generation is blocked. Do not create a Python, PIL, SVG, HTML, canvas, screenshot, browser, or placeholder renderer to work around it.
    If generated images are saved outside the workspace by the image tool, copy the selected final PNGs into the required `image_path` locations before packaging.
-10. After all six model-generated PNG files exist, run the wrapper. It must refresh the asset package, build the local package, build the Feishu card, and then validate or send:
+8. After all six model-generated PNG files exist, run the wrapper. It must refresh the asset package, build the local package, build the Feishu card, and then validate or send:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --local-only`
-11. After a machine restart, check Feishu credentials without building or sending:
+9. After a machine restart, check Feishu credentials without building or sending:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-feishu`
-12. Before using the workflow from a new Codex window, run read-only diagnostics:
+10. Before using the workflow from a new Codex window, run read-only diagnostics:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --doctor`
-13. Install a Windows logon health check when the workflow should recover after reboot:
-   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-startup-check`
-   If Task Scheduler or the Startup folder is blocked by local permissions, the workspace installer may fall back to the current user's Windows Run registry entry.
-   For "machine booted but no user has logged in", install the administrator-only SYSTEM startup task:
-   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-system-startup-check`
-14. For unattended Codex automations on Windows, install the local pending sender once:
-   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-pending-sender`
-   Codex automations must not call Feishu network endpoints directly when the background process is blocked by `WinError 10013`. Instead, after `--local-only`, queue the current package, release the automation lock, and trigger the local Windows sender:
-   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --queue-send`
-   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --release-automation-lock`
-   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --trigger-pending-sender`
-   The Windows sender is on-demand only. It runs `--send-pending` only when `--trigger-pending-sender` is called, sends the exact queued package, and records sent history.
-15. If Feishu credentials should be checked after building the package:
+11. If Feishu credentials should be checked after building the package:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --dry-run`
-16. Only when the user explicitly wants direct interactive delivery to Feishu:
+12. Only when the user explicitly wants direct delivery to Feishu:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --send`
    A successful send must append or update `content-history/sent-posts.jsonl` with the sent title, topic, source keys, Feishu `message_id`, and send time.
 
@@ -133,7 +113,7 @@ Authoritative rule: this skill packages model-generated cards. If any workspace 
 - Do not use screenshots, browser-rendered HTML, Mermaid, matplotlib, or presentation slides as final card substitutes.
 - If a legacy local image renderer exists in a workspace, ignore it and remove it before delivery; it is not part of the accepted workflow.
 - The Python wrapper is allowed to require the 6 final PNG files to exist because image generation is handled by `baoyu-image-cards`/`imagegen`, not by the packaging scripts.
-- The wrapper must use the workspace lock `.xhs_delivery.lock`; do not run direct workflow and skill workflow concurrently in the same workspace.
+- The wrapper must use the workspace lock `.xhs_delivery.lock`; do not run two package/send workflows concurrently in the same workspace.
 - Feishu card must contain only: topic, title, full body, image list, 6 image previews, and tags.
 - Cover cards for GitHub/open-source topics must expose the concrete project/source facts immediately while keeping the warm cute hand-drawn macaron style.
 - `generate_current_assets.py` must not contain or emit the removed old prompt brain phrases: `Cover hook rules`, `Main title, verbatim`, `Small subtitle, verbatim`, or `friendly but still high-click cover hook`.
@@ -159,9 +139,6 @@ python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-feishu
 python scripts/run_xhs_delivery.py --workspace "<workspace>" --doctor
 python scripts/run_xhs_delivery.py --workspace "<workspace>" --history
 python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-history
-python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-deepseek-writers
-python scripts/run_xhs_delivery.py --workspace "<workspace>" --trigger-deepseek-writers
-python scripts/run_xhs_delivery.py --workspace "<workspace>" --deepseek-writers-status
 python "<workspace>\asset-generation\write_copy_deepseek.py"
 python "<workspace>\asset-generation\write_image_prompts_deepseek.py"
 python "<workspace>\asset-generation\generate_current_assets.py"

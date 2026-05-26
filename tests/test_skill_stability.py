@@ -169,10 +169,7 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertTrue((workspace / "asset-generation" / "write_copy_deepseek.py").exists())
             self.assertTrue((workspace / "asset-generation" / "write_image_prompts_deepseek.py").exists())
             self.assertTrue((workspace / "asset-generation" / "generate_current_assets.py").exists())
-            self.assertTrue((workspace / "asset-generation" / "run_deepseek_writers.py").exists())
-            self.assertTrue((workspace / "asset-generation" / "install_deepseek_writer_task.py").exists())
-            self.assertTrue((workspace / "feishu-delivery" / "send_pending_delivery.py").exists())
-            self.assertTrue((workspace / "feishu-delivery" / "install_pending_sender.py").exists())
+            self.assertTrue((workspace / "feishu-delivery" / "send_delivery_card.py").exists())
 
     def test_generate_assets_uses_deepseek_plan_and_removes_old_prompt_brain(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -328,29 +325,6 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertIn("request.ProxyHandler({})", text)
             self.assertIn("URL_OPENER.open", text)
 
-    def test_pending_sender_is_on_demand_only(self) -> None:
-        for relative_path in [
-            "feishu-delivery/install_pending_sender.py",
-            "asset-generation/install_deepseek_writer_task.py",
-        ]:
-            text = (ROOT / "assets" / "workspace-template" / relative_path).read_text(encoding="utf-8")
-            self.assertIn("Register-ScheduledTask", text)
-            self.assertIn('"trigger_mode": "on_demand"', text)
-            self.assertNotIn('"/SC"', text)
-            self.assertNotIn('"MINUTE"', text)
-
-    def test_deepseek_writer_wrapper_runs_both_writers(self) -> None:
-        text = (
-            ROOT
-            / "assets"
-            / "workspace-template"
-            / "asset-generation"
-            / "run_deepseek_writers.py"
-        ).read_text(encoding="utf-8")
-        self.assertIn("write_copy_deepseek.py", text)
-        self.assertIn("write_image_prompts_deepseek.py", text)
-        self.assertIn("deepseek-writers-result.json", text)
-
     def test_doctor_reports_missing_images_without_failing_command(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp) / "workspace"
@@ -428,40 +402,6 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertEqual(records[0]["message_id"], "om_test")
             self.assertEqual(records[0]["delivery_id"], package["review_id"])
             self.assertIn(records[0]["topic_key"], records[0]["source_keys"])
-
-    def test_pending_sender_queues_valid_package_and_defers_during_automation_lock(self) -> None:
-        with tempfile.TemporaryDirectory() as temp:
-            workspace = Path(temp) / "workspace"
-            self.init_workspace(workspace)
-            write_smoke_spec(workspace)
-            generated = run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace)
-            self.assertEqual(generated.returncode, 0, generated.stderr)
-            package_path = workspace / "asset-generation" / "outputs" / "current-publish-assets.json"
-            package = json.loads(package_path.read_text(encoding="utf-8"))
-            time.sleep(1.1)
-            for image in package["images"]:
-                image_path = workspace / image["image_path"]
-                image_path.parent.mkdir(parents=True, exist_ok=True)
-                image_path.write_bytes(b"png")
-            self.assertEqual(run([sys.executable, str(workspace / "asset-generation" / "generate_current_assets.py")], cwd=workspace).returncode, 0)
-            self.assertEqual(run([sys.executable, str(workspace / "publish-mainline" / "build_manual_publish_package.py")], cwd=workspace).returncode, 0)
-            self.assertEqual(run([sys.executable, str(workspace / "publish-mainline" / "preflight.py")], cwd=workspace).returncode, 0)
-            self.assertEqual(run([sys.executable, str(workspace / "feishu-delivery" / "build_delivery_card.py")], cwd=workspace).returncode, 0)
-
-            queued = run([sys.executable, str(workspace / "feishu-delivery" / "send_pending_delivery.py"), "--queue"], cwd=workspace)
-            self.assertEqual(queued.returncode, 0, queued.stderr + queued.stdout)
-            pending_path = workspace / "feishu-delivery" / "outputs" / "pending-send.json"
-            self.assertTrue(pending_path.exists())
-            pending = json.loads(pending_path.read_text(encoding="utf-8"))
-            self.assertEqual(pending["status"], "pending")
-            self.assertEqual(pending["delivery_id"], package["review_id"])
-
-            (workspace / ".xhs_automation.lock").write_text("{}", encoding="utf-8")
-            deferred = run([sys.executable, str(workspace / "feishu-delivery" / "send_pending_delivery.py"), "--send-pending"], cwd=workspace)
-            self.assertEqual(deferred.returncode, 0, deferred.stderr + deferred.stdout)
-            result = json.loads((workspace / "feishu-delivery" / "outputs" / "pending-send-result.json").read_text(encoding="utf-8"))
-            self.assertEqual(result["status"], "deferred_lock_active")
-            self.assertTrue(pending_path.exists())
 
     def test_safety_scan_blocks_legacy_renderer_and_browser_state(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
