@@ -72,17 +72,26 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--install-startup-check", action="store_true", help="Install a Windows logon Feishu health check")
     mode.add_argument("--install-system-startup-check", action="store_true", help="Install a Windows startup health check; requires administrator")
     mode.add_argument("--uninstall-startup-check", action="store_true", help="Remove the Windows logon Feishu health check")
+    mode.add_argument("--install-pending-sender", action="store_true", help="Install the local Windows pending-send task")
+    mode.add_argument("--uninstall-pending-sender", action="store_true", help="Remove the local Windows pending-send task")
+    mode.add_argument("--pending-sender-status", action="store_true", help="Show pending-send task and queue status")
+    mode.add_argument("--trigger-pending-sender", action="store_true", help="Trigger the local Windows pending-send task")
     mode.add_argument("--automation-lock-status", action="store_true", help="Show the workspace automation lock status")
     mode.add_argument("--acquire-automation-lock", action="store_true", help="Acquire the workspace automation lock")
     mode.add_argument("--release-automation-lock", action="store_true", help="Release the workspace automation lock")
     mode.add_argument("--local-only", action="store_true", help="Build and validate without Feishu credentials")
     mode.add_argument("--dry-run", action="store_true", help="Build and validate Feishu credentials")
     mode.add_argument("--send", action="store_true", help="Build and send the Feishu delivery card")
+    mode.add_argument("--queue-send", action="store_true", help="Queue the current validated package for the local sender")
+    mode.add_argument("--send-pending", action="store_true", help="Send a queued package from the local pending sender")
+    parser.add_argument("--trigger-local-sender", action="store_true", help="With --queue-send, trigger the Windows pending-send task")
     return parser
 
 
 def main(argv: list[str]) -> int:
     args = build_parser().parse_args(argv)
+    if args.trigger_local_sender and not args.queue_send:
+        raise SystemExit("--trigger-local-sender can only be used with --queue-send")
     if args.check_feishu:
         run_step("check_feishu_ready", [sys.executable, ".\\feishu-delivery\\check_feishu_ready.py"])
         return 0
@@ -104,6 +113,19 @@ def main(argv: list[str]) -> int:
     if args.uninstall_startup_check:
         run_step("uninstall_startup_check", [sys.executable, ".\\feishu-delivery\\install_startup_check.py", "--uninstall"])
         return 0
+    if args.install_pending_sender:
+        run_step("install_pending_sender", [sys.executable, ".\\feishu-delivery\\install_pending_sender.py", "--install"])
+        return 0
+    if args.uninstall_pending_sender:
+        run_step("uninstall_pending_sender", [sys.executable, ".\\feishu-delivery\\install_pending_sender.py", "--uninstall"])
+        return 0
+    if args.pending_sender_status:
+        run_step("pending_sender_status", [sys.executable, ".\\feishu-delivery\\send_pending_delivery.py", "--status"])
+        run_step("pending_sender_task_status", [sys.executable, ".\\feishu-delivery\\install_pending_sender.py", "--status"])
+        return 0
+    if args.trigger_pending_sender:
+        run_step("trigger_pending_sender", [sys.executable, ".\\feishu-delivery\\install_pending_sender.py", "--run-now"])
+        return 0
     if args.automation_lock_status:
         run_step("automation_lock_status", [sys.executable, ".\\automation-lock\\automation_lock.py", "--status"])
         return 0
@@ -112,6 +134,14 @@ def main(argv: list[str]) -> int:
         return 0
     if args.release_automation_lock:
         run_step("release_automation_lock", [sys.executable, ".\\automation-lock\\automation_lock.py", "--release"])
+        return 0
+    if args.queue_send:
+        run_step("queue_pending_send", [sys.executable, ".\\feishu-delivery\\send_pending_delivery.py", "--queue"])
+        if args.trigger_local_sender:
+            run_step("trigger_pending_sender", [sys.executable, ".\\feishu-delivery\\install_pending_sender.py", "--run-now"])
+        return 0
+    if args.send_pending:
+        run_step("send_pending_delivery", [sys.executable, ".\\feishu-delivery\\send_pending_delivery.py", "--send-pending"])
         return 0
 
     send_mode = "--local-only"

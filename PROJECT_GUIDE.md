@@ -54,8 +54,10 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | `assets/workspace-template/feishu-delivery/.env.example` | Template for Feishu credentials. Copy it to `.env` and fill in local values. |
 | `assets/workspace-template/feishu-delivery/check_feishu_ready.py` | Checks Feishu credentials and token access without sending messages. |
 | `assets/workspace-template/feishu-delivery/install_startup_check.py` | Installs Windows startup health checks for Feishu readiness. |
+| `assets/workspace-template/feishu-delivery/install_pending_sender.py` | Installs and manages the Windows scheduled task that sends queued Feishu packages outside Codex automation networking. |
 | `assets/workspace-template/feishu-delivery/build_delivery_card.py` | Builds the buttonless Feishu interactive card JSON. |
 | `assets/workspace-template/feishu-delivery/send_delivery_card.py` | Validates locally, performs dry-runs, uploads images, and sends the final Feishu card. |
+| `assets/workspace-template/feishu-delivery/send_pending_delivery.py` | Queues a validated local package, lets the scheduled sender deliver it, and records pending-send status/history. |
 
 ## GitHub Automation
 

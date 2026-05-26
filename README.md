@@ -17,6 +17,7 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, browser co
 - A bundled `xhs-warm-cute-open-source` visual style for warm cute Xiaohongshu AI cards with visible GitHub/open-source facts on repo-based covers.
 - Workspace-local sent history that records successful Feishu deliveries and blocks repeated topics.
 - A workflow lock for unattended Codex automations.
+- A Windows pending sender for unattended runs where the Codex automation background process cannot open Feishu sockets directly.
 - Safety checks that prevent accidental Xiaohongshu automation or secret leakage.
 
 ## Mental Model
@@ -166,6 +167,29 @@ python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_deliv
 ```powershell
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --send
 ```
+
+## Unattended Feishu Sending
+
+On some Windows desktops, interactive Python can reach Feishu while Codex
+background automations are blocked by `WinError 10013` when opening sockets to
+`open.feishu.cn`. For unattended automations, install the local pending sender:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --install-pending-sender
+```
+
+Then the Codex automation should run `--local-only`, release the automation
+lock, and queue the package for the Windows sender:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --queue-send
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --release-automation-lock
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --trigger-pending-sender
+```
+
+The scheduled task runs every few minutes, calls `--send-pending`, records the
+same `content-history\sent-posts.jsonl` success entry as direct `--send`, and
+leaves the pending marker in place for retry if Feishu is temporarily down.
 
 ## content_spec.json Shape
 

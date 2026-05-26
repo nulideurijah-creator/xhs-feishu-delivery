@@ -99,9 +99,16 @@ Authoritative rule: this skill packages model-generated cards. If any workspace 
    If Task Scheduler or the Startup folder is blocked by local permissions, the workspace installer may fall back to the current user's Windows Run registry entry.
    For "machine booted but no user has logged in", install the administrator-only SYSTEM startup task:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-system-startup-check`
-14. If Feishu credentials should be checked after building the package:
+14. For unattended Codex automations on Windows, install the local pending sender once:
+   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-pending-sender`
+   Codex automations must not call Feishu network endpoints directly when the background process is blocked by `WinError 10013`. Instead, after `--local-only`, queue the current package, release the automation lock, and trigger the local Windows sender:
+   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --queue-send`
+   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --release-automation-lock`
+   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --trigger-pending-sender`
+   The Windows sender runs `--send-pending`, sends the exact queued package, records sent history, and retries every few minutes if Feishu is temporarily unavailable.
+15. If Feishu credentials should be checked after building the package:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --dry-run`
-15. Only when the user explicitly wants delivery to Feishu:
+16. Only when the user explicitly wants direct interactive delivery to Feishu:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --send`
    A successful send must append or update `content-history/sent-posts.jsonl` with the sent title, topic, source keys, Feishu `message_id`, and send time.
 
