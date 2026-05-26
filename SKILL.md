@@ -74,9 +74,12 @@ Authoritative rule: this skill packages model-generated cards. If any workspace 
 5. Check the current spec against sent history before image work:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-history`
    If it reports `duplicate`, choose a new topic/angle/source. Only set `history.allow_repeat: true` when the user explicitly asks to repeat a topic.
-6. Generate the copy with DeepSeek before image work:
+6. For unattended Codex automations on Windows, install and use the local on-demand DeepSeek writer task because Codex background Python can be denied direct socket access with `WinError 10013`:
+   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-deepseek-writers`
+   `python scripts/run_xhs_delivery.py --workspace "<workspace>" --trigger-deepseek-writers`
+   Poll until `python scripts/run_xhs_delivery.py --workspace "<workspace>" --deepseek-writers-status` reports `status: completed`, `copy_ready: true`, and `image_prompts_ready: true`. The task is on-demand only and has no timer.
+7. In an interactive non-automation run where local Python network access is known to work, direct DeepSeek writing is also valid:
    `python "<workspace>\\asset-generation\\write_copy_deepseek.py"`
-7. Generate image prompt plans with DeepSeek after writing copy:
    `python "<workspace>\\asset-generation\\write_image_prompts_deepseek.py"`
 8. Run the asset generator first. It validates the DeepSeek prompt-plan metadata, writes the copy package, and writes the six baoyu-wrapped prompt files:
    `python "<workspace>\\asset-generation\\generate_current_assets.py"`
@@ -156,6 +159,9 @@ python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-feishu
 python scripts/run_xhs_delivery.py --workspace "<workspace>" --doctor
 python scripts/run_xhs_delivery.py --workspace "<workspace>" --history
 python scripts/run_xhs_delivery.py --workspace "<workspace>" --check-history
+python scripts/run_xhs_delivery.py --workspace "<workspace>" --install-deepseek-writers
+python scripts/run_xhs_delivery.py --workspace "<workspace>" --trigger-deepseek-writers
+python scripts/run_xhs_delivery.py --workspace "<workspace>" --deepseek-writers-status
 python "<workspace>\asset-generation\write_copy_deepseek.py"
 python "<workspace>\asset-generation\write_image_prompts_deepseek.py"
 python "<workspace>\asset-generation\generate_current_assets.py"

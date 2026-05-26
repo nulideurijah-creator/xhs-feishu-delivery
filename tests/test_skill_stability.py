@@ -169,6 +169,8 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertTrue((workspace / "asset-generation" / "write_copy_deepseek.py").exists())
             self.assertTrue((workspace / "asset-generation" / "write_image_prompts_deepseek.py").exists())
             self.assertTrue((workspace / "asset-generation" / "generate_current_assets.py").exists())
+            self.assertTrue((workspace / "asset-generation" / "run_deepseek_writers.py").exists())
+            self.assertTrue((workspace / "asset-generation" / "install_deepseek_writer_task.py").exists())
             self.assertTrue((workspace / "feishu-delivery" / "send_pending_delivery.py").exists())
             self.assertTrue((workspace / "feishu-delivery" / "install_pending_sender.py").exists())
 
@@ -327,17 +329,27 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertIn("URL_OPENER.open", text)
 
     def test_pending_sender_is_on_demand_only(self) -> None:
+        for relative_path in [
+            "feishu-delivery/install_pending_sender.py",
+            "asset-generation/install_deepseek_writer_task.py",
+        ]:
+            text = (ROOT / "assets" / "workspace-template" / relative_path).read_text(encoding="utf-8")
+            self.assertIn("Register-ScheduledTask", text)
+            self.assertIn('"trigger_mode": "on_demand"', text)
+            self.assertNotIn('"/SC"', text)
+            self.assertNotIn('"MINUTE"', text)
+
+    def test_deepseek_writer_wrapper_runs_both_writers(self) -> None:
         text = (
             ROOT
             / "assets"
             / "workspace-template"
-            / "feishu-delivery"
-            / "install_pending_sender.py"
+            / "asset-generation"
+            / "run_deepseek_writers.py"
         ).read_text(encoding="utf-8")
-        self.assertIn("Register-ScheduledTask", text)
-        self.assertIn('"trigger_mode": "on_demand"', text)
-        self.assertNotIn('"/SC"', text)
-        self.assertNotIn('"MINUTE"', text)
+        self.assertIn("write_copy_deepseek.py", text)
+        self.assertIn("write_image_prompts_deepseek.py", text)
+        self.assertIn("deepseek-writers-result.json", text)
 
     def test_doctor_reports_missing_images_without_failing_command(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

@@ -76,6 +76,11 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--uninstall-pending-sender", action="store_true", help="Remove the local Windows pending-send task")
     mode.add_argument("--pending-sender-status", action="store_true", help="Show pending-send task and queue status")
     mode.add_argument("--trigger-pending-sender", action="store_true", help="Trigger the local Windows pending-send task")
+    mode.add_argument("--install-deepseek-writers", action="store_true", help="Install the local Windows DeepSeek writer task")
+    mode.add_argument("--uninstall-deepseek-writers", action="store_true", help="Remove the local Windows DeepSeek writer task")
+    mode.add_argument("--deepseek-writers-status", action="store_true", help="Show DeepSeek writer task and result status")
+    mode.add_argument("--trigger-deepseek-writers", action="store_true", help="Trigger the local Windows DeepSeek writer task")
+    mode.add_argument("--run-deepseek-writers", action="store_true", help="Run DeepSeek copy and image prompt writers")
     mode.add_argument("--automation-lock-status", action="store_true", help="Show the workspace automation lock status")
     mode.add_argument("--acquire-automation-lock", action="store_true", help="Acquire the workspace automation lock")
     mode.add_argument("--release-automation-lock", action="store_true", help="Release the workspace automation lock")
@@ -125,6 +130,22 @@ def main(argv: list[str]) -> int:
         return 0
     if args.trigger_pending_sender:
         run_step("trigger_pending_sender", [sys.executable, ".\\feishu-delivery\\install_pending_sender.py", "--run-now"])
+        return 0
+    if args.install_deepseek_writers:
+        run_step("install_deepseek_writers", [sys.executable, ".\\asset-generation\\install_deepseek_writer_task.py", "--install"])
+        return 0
+    if args.uninstall_deepseek_writers:
+        run_step("uninstall_deepseek_writers", [sys.executable, ".\\asset-generation\\install_deepseek_writer_task.py", "--uninstall"])
+        return 0
+    if args.deepseek_writers_status:
+        run_step("deepseek_writers_status", [sys.executable, ".\\asset-generation\\run_deepseek_writers.py", "--status"])
+        run_step("deepseek_writer_task_status", [sys.executable, ".\\asset-generation\\install_deepseek_writer_task.py", "--status"])
+        return 0
+    if args.trigger_deepseek_writers:
+        run_step("trigger_deepseek_writers", [sys.executable, ".\\asset-generation\\install_deepseek_writer_task.py", "--run-now"])
+        return 0
+    if args.run_deepseek_writers:
+        run_step("run_deepseek_writers", [sys.executable, ".\\asset-generation\\run_deepseek_writers.py", "--run"])
         return 0
     if args.automation_lock_status:
         run_step("automation_lock_status", [sys.executable, ".\\automation-lock\\automation_lock.py", "--status"])

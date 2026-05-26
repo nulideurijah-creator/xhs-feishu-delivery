@@ -45,6 +45,8 @@ These files are copied into a user workspace by `--init-workspace`. The copied w
 | `assets/workspace-template/asset-generation/generate_current_assets.py` | Validates the spec, wraps DeepSeek image prompt plans with fixed baoyu metadata, writes copy/prompt outputs, and prepares image paths for model-generated cards. |
 | `assets/workspace-template/asset-generation/write_copy_deepseek.py` | Mandatory DeepSeek v4 Flash writer for `title`, `body_full`, and `tags`; reads `DEEPSEEK_API_KEY` from workspace `.env` or the environment and records `copy_generation.provider=deepseek`. |
 | `assets/workspace-template/asset-generation/write_image_prompts_deepseek.py` | Mandatory DeepSeek writer for the six image-card `image_prompt_plan` objects; records `image_prompt_generation.provider=deepseek` and blocks fallback to old prompt templates. |
+| `assets/workspace-template/asset-generation/run_deepseek_writers.py` | Runs the copy writer and image prompt writer as one local step and writes status for automation polling. |
+| `assets/workspace-template/asset-generation/install_deepseek_writer_task.py` | Installs and manages the on-demand Windows task that runs DeepSeek writers outside Codex automation networking. |
 | `assets/workspace-template/content-history/check_history.py` | Lists sent post history and checks the current spec against previous Feishu deliveries. |
 | `assets/workspace-template/content-history/history_utils.py` | Shared duplicate-key normalization, history read/write, and sent-record helpers. |
 | `assets/workspace-template/diagnostics/doctor.py` | Read-only workspace doctor. It writes diagnostics reports without sending Feishu messages or generating images. |

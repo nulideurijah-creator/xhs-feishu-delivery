@@ -13,6 +13,7 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, browser co
 - A wrapper for initialization, diagnostics, Feishu checks, packaging, local validation, and sending.
 - A DeepSeek-only article writer using `references/creator_prompt.md`.
 - A mandatory DeepSeek v4 Flash writer that updates `title`, `body_full`, and `tags` from the verified factual spec.
+- A Windows on-demand DeepSeek writer task for unattended automations where the Codex background process cannot open model API sockets directly.
 - A model-image handoff using `baoyu-image-cards` and Codex `imagegen`.
 - A bundled `xhs-warm-cute-open-source` visual style for warm cute Xiaohongshu AI cards with visible GitHub/open-source facts on repo-based covers.
 - Workspace-local sent history that records successful Feishu deliveries and blocks repeated topics.
@@ -137,6 +138,17 @@ python .\asset-generation\write_copy_deepseek.py
 ```powershell
 python .\asset-generation\write_image_prompts_deepseek.py
 ```
+
+For unattended Codex automations on Windows, use the local on-demand writer task
+instead of direct Python network calls:
+
+```powershell
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --install-deepseek-writers
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --trigger-deepseek-writers
+python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --deepseek-writers-status
+```
+
+The `XHS-DeepSeek-Writers` task has no timer. It runs only when triggered.
 
 6. Generate copy output and baoyu-wrapped image prompt files:
 
