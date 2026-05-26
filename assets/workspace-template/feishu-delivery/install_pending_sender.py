@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install a Windows task that sends queued Feishu deliveries.
+"""Install an on-demand Windows task that sends queued Feishu deliveries.
 
 The task runs a no-space command wrapper from the user's Codex home. The wrapper
 starts PowerShell, changes into this workspace, and calls
@@ -24,7 +24,6 @@ WORK_DIR = Path(__file__).resolve().parent
 OUT = WORK_DIR / "outputs"
 RESULT_PATH = OUT / "pending-sender-install-result.json"
 TASK_NAME = "XHS-Feishu-Pending-Sender"
-DEFAULT_INTERVAL_MINUTES = 5
 
 
 def now() -> str:
@@ -116,27 +115,27 @@ def write_runners() -> tuple[Path, Path]:
     return ps1_path, cmd_path
 
 
-def install(interval_minutes: int) -> int:
+def install() -> int:
     ps1_path, cmd_path = write_runners()
     completed = run_command(
         [
-            "schtasks",
-            "/Create",
-            "/TN",
-            TASK_NAME,
-            "/SC",
-            "MINUTE",
-            "/MO",
-            str(max(1, interval_minutes)),
-            "/TR",
-            str(cmd_path),
-            "/F",
+            "powershell.exe",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-Command",
+            (
+                "$Action = New-ScheduledTaskAction "
+                f"-Execute {ps_quote(cmd_path)}; "
+                f"Register-ScheduledTask -TaskName {ps_quote(Path(TASK_NAME))} "
+                "-Action $Action -Force | Out-Null"
+            ),
         ]
     )
     result = {
         "status": "installed" if completed.returncode == 0 else "install_failed",
         "task_name": TASK_NAME,
-        "interval_minutes": max(1, interval_minutes),
+        "trigger_mode": "on_demand",
         "runner_cmd": str(cmd_path),
         "runner_ps1": str(ps1_path),
         "returncode": completed.returncode,
@@ -201,14 +200,13 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--uninstall", action="store_true", help="Remove the scheduled pending sender")
     mode.add_argument("--status", action="store_true", help="Query the scheduled pending sender")
     mode.add_argument("--run-now", action="store_true", help="Trigger the scheduled pending sender immediately")
-    parser.add_argument("--interval-minutes", type=int, default=DEFAULT_INTERVAL_MINUTES)
     return parser
 
 
 def main() -> int:
     args = build_parser().parse_args()
     if args.install:
-        return install(args.interval_minutes)
+        return install()
     if args.uninstall:
         return uninstall()
     if args.run_now:

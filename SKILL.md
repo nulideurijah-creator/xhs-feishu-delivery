@@ -105,7 +105,7 @@ Authoritative rule: this skill packages model-generated cards. If any workspace 
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --queue-send`
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --release-automation-lock`
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --trigger-pending-sender`
-   The Windows sender runs `--send-pending`, sends the exact queued package, records sent history, and retries every few minutes if Feishu is temporarily unavailable.
+   The Windows sender is on-demand only. It runs `--send-pending` only when `--trigger-pending-sender` is called, sends the exact queued package, and records sent history.
 15. If Feishu credentials should be checked after building the package:
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --dry-run`
 16. Only when the user explicitly wants direct interactive delivery to Feishu:

@@ -326,6 +326,19 @@ class SkillStabilityTests(unittest.TestCase):
             self.assertIn("request.ProxyHandler({})", text)
             self.assertIn("URL_OPENER.open", text)
 
+    def test_pending_sender_is_on_demand_only(self) -> None:
+        text = (
+            ROOT
+            / "assets"
+            / "workspace-template"
+            / "feishu-delivery"
+            / "install_pending_sender.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Register-ScheduledTask", text)
+        self.assertIn('"trigger_mode": "on_demand"', text)
+        self.assertNotIn('"/SC"', text)
+        self.assertNotIn('"MINUTE"', text)
+
     def test_doctor_reports_missing_images_without_failing_command(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             workspace = Path(temp) / "workspace"

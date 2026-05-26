@@ -187,9 +187,10 @@ python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_deliv
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --trigger-pending-sender
 ```
 
-The scheduled task runs every few minutes, calls `--send-pending`, records the
-same `content-history\sent-posts.jsonl` success entry as direct `--send`, and
-leaves the pending marker in place for retry if Feishu is temporarily down.
+The scheduled task has no timer. It runs only when triggered by
+`--trigger-pending-sender`, calls `--send-pending`, records the same
+`content-history\sent-posts.jsonl` success entry as direct `--send`, and leaves
+the pending marker in place if Feishu is temporarily down.
 
 ## content_spec.json Shape
 
