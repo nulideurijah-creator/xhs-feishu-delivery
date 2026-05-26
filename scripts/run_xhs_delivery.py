@@ -20,6 +20,8 @@ from pathlib import Path
 BUILD_REQUIRED_FILES = [
     # Files required for local-only, dry-run, and send modes.
     "asset-generation/content_spec.json",
+    "asset-generation/write_copy_deepseek.py",
+    "asset-generation/write_image_prompts_deepseek.py",
     "asset-generation/generate_current_assets.py",
     "publish-mainline/build_manual_publish_package.py",
     "publish-mainline/preflight.py",

@@ -2,7 +2,7 @@
 
 `xhs-feishu-delivery` is a Codex skill plus a clean workspace template for producing Xiaohongshu image-text posts and delivering the complete manual posting package to Feishu.
 
-It is built for creators who want an AI-assisted workflow but still want to publish manually on Xiaohongshu. The workflow researches an AI/tools/dev topic, lets the current model write the final title/body/tags directly, prepares six image-card prompts, expects real image-model PNGs, builds a manual publishing package, and sends the full package to Feishu.
+It is built for creators who want an AI-assisted workflow but still want to publish manually on Xiaohongshu. The workflow researches an AI/tools/dev topic, writes the final title/body/tags through DeepSeek only, prepares six image-card prompts, expects real image-model PNGs, builds a manual publishing package, and sends the full package to Feishu.
 
 It does **not** automate Xiaohongshu publishing, login, cookies, MCP, browser control, analytics, or Obsidian memory.
 
@@ -11,8 +11,8 @@ It does **not** automate Xiaohongshu publishing, login, cookies, MCP, browser co
 - A Codex skill entrypoint: `SKILL.md`.
 - A clean workspace template under `assets/workspace-template`.
 - A wrapper for initialization, diagnostics, Feishu checks, packaging, local validation, and sending.
-- A direct model-writing flow using `references/creator_prompt.md`.
-- An optional DeepSeek v4 Flash writer that updates `title`, `body_full`, and `tags` from the verified factual spec.
+- A DeepSeek-only article writer using `references/creator_prompt.md`.
+- A mandatory DeepSeek v4 Flash writer that updates `title`, `body_full`, and `tags` from the verified factual spec.
 - A model-image handoff using `baoyu-image-cards` and Codex `imagegen`.
 - A bundled `xhs-warm-cute-open-source` visual style for warm cute Xiaohongshu AI cards with visible GitHub/open-source facts on repo-based covers.
 - Workspace-local sent history that records successful Feishu deliveries and blocks repeated topics.
@@ -35,7 +35,7 @@ The GitHub repo does not include your Feishu credentials, generated images, or p
 flowchart LR
   A["aihot selects AI topic"] --> B["agent-reach verifies facts"]
   B --> C["Create factual writing_brief"]
-  C --> D["creator_prompt + model write title/body/tags"]
+  C --> D["DeepSeek writes title/body/tags"]
   D --> E["content_spec.json"]
   E --> F["Check sent history for duplicates"]
   F --> G["baoyu-image-cards prepares 6-card structure"]
@@ -54,7 +54,7 @@ flowchart LR
 - `imagegen`: generates the final raster PNG cards.
 - `xhs-feishu-delivery`: packages the result and sends it to Feishu.
 
-Title and body are written directly from `writing_brief` and `references/creator_prompt.md`. There is no formula-title layer and no extra rewrite layer. If the workspace has `DEEPSEEK_API_KEY` set in `.env` or the environment, `asset-generation/write_copy_deepseek.py` can use DeepSeek v4 Flash for this writing step.
+Title and body are written only by `asset-generation/write_copy_deepseek.py` from `writing_brief` and `references/creator_prompt.md`. Image-card prompt plans are written only by `asset-generation/write_image_prompts_deepseek.py` from the final DeepSeek copy and `references/image_prompt_creator_prompt.md`. The workspace must have `DEEPSEEK_API_KEY` set in `.env` or the environment before article copy or image prompt plans can be generated.
 
 ## Prerequisites
 
@@ -117,7 +117,7 @@ python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_deliv
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --history
 ```
 
-2. Let Codex use the skill to create `asset-generation/content_spec.json` for the current topic. The spec must include verified facts, `writing_brief`, final title, final body, tags, image slug, and exactly six image pages.
+2. Let Codex use the skill to create `asset-generation/content_spec.json` for the current topic. The factual spec must include verified facts, `writing_brief`, image slug, and exactly six image pages. Do not hand-write final article copy.
 
 3. Check duplicate history:
 
@@ -125,19 +125,25 @@ python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_deliv
 python "$env:USERPROFILE\.codex\skills\xhs-feishu-delivery\scripts\run_xhs_delivery.py" --workspace "D:\path\to\xhs-workspace" --check-history
 ```
 
-4. Optional: write title/body/tags with DeepSeek v4 Flash after the factual spec exists:
+4. Write title/body/tags with DeepSeek v4 Flash after the factual spec exists:
 
 ```powershell
 python .\asset-generation\write_copy_deepseek.py
 ```
 
-5. Generate copy output and image prompt files:
+5. Generate the six image prompt plans with DeepSeek:
+
+```powershell
+python .\asset-generation\write_image_prompts_deepseek.py
+```
+
+6. Generate copy output and baoyu-wrapped image prompt files:
 
 ```powershell
 python .\asset-generation\generate_current_assets.py
 ```
 
-6. Generate six PNG cards with `baoyu-image-cards` and Codex `imagegen`, then save each PNG to the `image_path` values listed in:
+7. Generate six PNG cards with `baoyu-image-cards` and Codex `imagegen`/image2, then save each PNG to the `image_path` values listed in:
 
 ```text
 asset-generation\outputs\current-publish-assets.json
@@ -192,7 +198,20 @@ Minimum shape:
   },
   "body_full": "最终正文",
   "tags": ["AI工具", "小红书运营"],
+  "copy_generation": {
+    "provider": "deepseek",
+    "model": "deepseek-v4-flash",
+    "writer": "asset-generation/write_copy_deepseek.py",
+    "prompt_path": "references/creator_prompt.md"
+  },
   "image_slug": "example-topic",
+  "image_prompt_generation": {
+    "provider": "deepseek",
+    "model": "deepseek-v4-flash",
+    "writer": "asset-generation/write_image_prompts_deepseek.py",
+    "source_title": "final title",
+    "source_body_sha256": "..."
+  },
   "pages": [
     {"page_id": "01-cover", "title": "封面标题", "subtitle": "封面副标题", "visual": "cover visual direction"},
     {"page_id": "02-point", "title": "第2张", "subtitle": "副标题", "visual": "visual direction"},
@@ -204,7 +223,7 @@ Minimum shape:
 }
 ```
 
-The cover page title must match the top-level `title`. If the model writing step changes the title, refresh `pages` before generating assets.
+`generate_current_assets.py` rejects specs without `image_prompt_generation.provider=deepseek` and rejects stale prompt plans whose recorded title/body hash no longer matches the current copy.
 
 See [references/content_spec.md](references/content_spec.md) for details.
 
@@ -212,7 +231,8 @@ See [references/content_spec.md](references/content_spec.md) for details.
 
 - Stay inside the AI/tools/dev productivity vertical.
 - Ground the post in at least two source-backed facts.
-- Let the current model write the final title/body/tags directly from the verified facts and `references/creator_prompt.md`.
+- Generate the final title/body/tags only through `asset-generation/write_copy_deepseek.py`; asset generation rejects copy without `copy_generation.provider=deepseek`.
+- Generate image-card prompt plans only through `asset-generation/write_image_prompts_deepseek.py`; asset generation rejects prompt plans without `image_prompt_generation.provider=deepseek`.
 - GitHub/open-source posts should explain what the project does well, where it is useful, who should save it, and why it is worth trying.
 - Use "这个热度星标仅是一个参考" when star count needs caveat wording.
 

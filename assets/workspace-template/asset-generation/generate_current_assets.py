@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import sys
+import hashlib
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -27,6 +28,8 @@ IMAGE_PRESET = "sketch-summary"
 IMAGE_STYLE = "xhs-warm-cute-open-source"
 IMAGE_LAYOUT = "balanced"
 IMAGE_PALETTE = "macaron"
+COPY_WRITER = "asset-generation/write_copy_deepseek.py"
+IMAGE_PROMPT_WRITER = "asset-generation/write_image_prompts_deepseek.py"
 
 def now() -> str:
     return datetime.now(timezone(timedelta(hours=8))).isoformat(timespec="seconds")
@@ -41,7 +44,10 @@ def load_json(path: Path) -> dict[str, Any]:
 
 def write_text(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text.rstrip() + "\n", encoding="utf-8")
+    normalized = text.rstrip() + "\n"
+    if path.exists() and path.read_text(encoding="utf-8") == normalized:
+        return
+    path.write_text(normalized, encoding="utf-8")
 
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
@@ -66,6 +72,8 @@ def validate_spec(spec: dict[str, Any]) -> None:
     if missing:
         raise ValueError(f"content_spec missing: {missing}")
     validate_writing_brief(spec["writing_brief"])
+    validate_copy_generation(spec.get("copy_generation"))
+    validate_image_prompt_generation(spec.get("image_prompt_generation"), spec)
     if len(str(spec["title"])) > 20:
         raise ValueError(f"title too long: {len(str(spec['title']))}/20")
     body = str(spec["body_full"])
@@ -77,16 +85,7 @@ def validate_spec(spec: dict[str, Any]) -> None:
     pages = spec.get("pages", [])
     if not isinstance(pages, list) or len(pages) != 6:
         raise ValueError("content_spec must contain exactly 6 pages")
-    first_page = pages[0]
-    if not isinstance(first_page, dict):
-        raise ValueError("content_spec.pages[0] must be an object")
-    cover_title = str(first_page.get("title", "")).strip()
-    current_title = str(spec["title"]).strip()
-    if cover_title != current_title:
-        raise ValueError(
-            "cover page title must match current title; refresh pages after writing copy "
-            f"({cover_title!r} != {current_title!r})"
-        )
+    validate_pages(pages)
 
 
 def validate_writing_brief(brief: Any) -> None:
@@ -99,6 +98,63 @@ def validate_writing_brief(brief: Any) -> None:
     for index, item in enumerate(facts, start=1):
         if not isinstance(item, dict) or not str(item.get("claim", "")).strip() or not str(item.get("source_url", "")).strip():
             raise ValueError(f"writing_brief.facts[{index}] must include claim and source_url")
+
+
+def validate_copy_generation(copy_generation: Any) -> None:
+    """Reject title/body/tags that were not produced by the mandatory DeepSeek writer."""
+    if not isinstance(copy_generation, dict):
+        raise ValueError("copy_generation must record DeepSeek writing")
+    provider = str(copy_generation.get("provider", "")).strip().lower()
+    writer = str(copy_generation.get("writer", "")).strip()
+    model = str(copy_generation.get("model", "")).strip().lower()
+    if provider != "deepseek" or COPY_WRITER not in writer or "deepseek" not in model:
+        raise ValueError("copy_generation must record DeepSeek writing")
+
+
+def body_hash(spec: dict[str, Any]) -> str:
+    return hashlib.sha256(str(spec.get("body_full", "")).strip().encode("utf-8")).hexdigest()
+
+
+def validate_image_prompt_generation(image_prompt_generation: Any, spec: dict[str, Any]) -> None:
+    """Reject image prompts that were not planned by the mandatory DeepSeek writer."""
+    if not isinstance(image_prompt_generation, dict):
+        raise ValueError("image_prompt_generation must record DeepSeek image prompt writing")
+    provider = str(image_prompt_generation.get("provider", "")).strip().lower()
+    writer = str(image_prompt_generation.get("writer", "")).strip()
+    model = str(image_prompt_generation.get("model", "")).strip().lower()
+    source_title = str(image_prompt_generation.get("source_title", "")).strip()
+    source_body_sha256 = str(image_prompt_generation.get("source_body_sha256", "")).strip()
+    if provider != "deepseek" or IMAGE_PROMPT_WRITER not in writer or "deepseek" not in model:
+        raise ValueError("image_prompt_generation must record DeepSeek image prompt writing")
+    if source_title != str(spec.get("title", "")).strip():
+        raise ValueError("image_prompt_generation is stale: source_title does not match current title")
+    if source_body_sha256 != body_hash(spec):
+        raise ValueError("image_prompt_generation is stale: source_body_sha256 does not match current body")
+
+
+def validate_pages(pages: list[Any]) -> None:
+    for index, page in enumerate(pages, start=1):
+        if not isinstance(page, dict):
+            raise ValueError(f"content_spec.pages[{index}] must be an object")
+        if not str(page.get("page_id", "")).strip():
+            raise ValueError(f"content_spec.pages[{index}] missing page_id")
+        plan = page.get("image_prompt_plan")
+        if not isinstance(plan, dict):
+            raise ValueError(f"content_spec.pages[{index}] missing DeepSeek image_prompt_plan")
+        for field in [
+            "card_role",
+            "visible_title",
+            "visible_subtitle",
+            "visual_direction",
+            "composition",
+            "text_style",
+        ]:
+            if not str(plan.get(field, "")).strip():
+                raise ValueError(f"content_spec.pages[{index}].image_prompt_plan missing {field}")
+        for field in ["required_labels", "avoid"]:
+            value = plan.get(field, [])
+            if value is not None and not isinstance(value, list):
+                raise ValueError(f"content_spec.pages[{index}].image_prompt_plan.{field} must be a list")
 
 
 def render_fact_summary(spec: dict[str, Any]) -> str:
@@ -167,28 +223,20 @@ def project_fact_block(spec: dict[str, Any]) -> str:
     )
 
 
-def card_specific_rules(page: dict[str, Any], spec: dict[str, Any]) -> str:
-    if page["page_id"] == "01-cover":
-        return """Cover hook rules:
-- This is the first card and must stop Xiaohongshu users from swiping away.
-- Build the hook from tension: consequence, contrast, warning, strong pain point, or concrete benefit.
-- Make the headline feel like a sharp discovery or useful judgment, not a neutral report.
-- Keep it visually simple: one dominant metaphor, one large title, one short subtitle.
-- The value should be obvious in one second on a phone screen.
-- If verified GitHub stars, repo, license, or open-source facts exist, display them in a central GitHub-style project card; do not hide them in tiny secondary text.
-- Use the visible project card to prove the post is about a concrete open-source project, not a generic AI-tool opinion."""
-    return """Inner card rules:
-- Explain one idea per card with clear visual hierarchy.
-- Keep the same premium hand-drawn visual system as the cover.
-- Use small labels, arrows, circles, and checklist marks only where they help scanning."""
+def render_string_list(title: str, values: list[Any]) -> str:
+    items = [str(value).strip() for value in values if str(value).strip()]
+    if not items:
+        return f"{title}: none"
+    return title + ":\n" + "\n".join(f"- {item}" for item in items)
 
 
 def card_prompt(page: dict[str, Any], spec: dict[str, Any]) -> str:
+    plan = page["image_prompt_plan"]
     return f"""---
 source: asset-generation/content_spec.json
 content_id: {spec["content_id"]}
 page_id: {page["page_id"]}
-title: {page["title"]}
+title: {plan["visible_title"]}
 ratio: "3:4"
 preset: {IMAGE_PRESET}
 style: {IMAGE_STYLE}
@@ -199,37 +247,25 @@ review_status: pending
 
 Use case: infographic-diagram
 Asset type: Xiaohongshu vertical image card
-Primary request:
-Create one polished 3:4 Chinese Xiaohongshu AI knowledge card about {spec["topic"]}.
-
-Creative direction:
-Use the custom xhs-warm-cute-open-source style: warm cute hand-drawn Xiaohongshu tech card, cream macaron paper texture, rounded infographic boxes, soft watercolor corner blobs, and a friendly but still high-click cover hook.
-
-{card_specific_rules(page, spec)}
+Baoyu preset wrapper, keep unchanged:
+- preset: {IMAGE_PRESET}
+- style: {IMAGE_STYLE}
+- layout: {page_layout(page)}
+- palette: {IMAGE_PALETTE}
+- ratio: 3:4
+- backend: image2 or the runtime-equivalent real raster image model
 
 {project_fact_block(spec)}
 
-Text must be clear, large, and sparse:
-- Main title, verbatim: "{page["title"]}"
-- Small subtitle, verbatim: "{page["subtitle"]}"
-- Title color system: deep navy base, coral for one important number/keyword, teal or mint for small labels. Avoid pure black title blocks.
-
-Scene/backdrop:
-- Warm cream paper background, soft macaron zones in blue, mint, peach, and lavender.
-- Polished hand-drawn educational infographic, soft watercolor texture, rounded friendly sketch lines, premium creator-economy tone.
-- Use deep navy, coral, teal, mint, lavender, and warm cream in a coordinated palette; keep the result fresh, cute, and readable.
-- Avoid a cheap template look; the card should feel designed for Xiaohongshu discovery feed.
-
-Subject and visual:
-- {page["visual"]}
-
-Composition:
-- One large title area at the top.
-- One central visual metaphor in the middle.
-- One small subtitle band at the bottom.
-- Keep enough margin for mobile cropping.
-- If this is the cover, prioritize the hook headline, the concrete project/source card, and the central metaphor over explanatory detail.
-- If GitHub or open-source facts are provided, make repo name, star count, and open-source/license badge visible at phone-screen size.
+DeepSeek-generated image prompt plan, use as the content source:
+- Card role: {plan["card_role"]}
+- Visible title: {plan["visible_title"]}
+- Visible subtitle: {plan["visible_subtitle"]}
+- Visual direction: {plan["visual_direction"]}
+- Composition: {plan["composition"]}
+- Text style: {plan["text_style"]}
+{render_string_list("Required short labels", plan.get("required_labels", []))}
+{render_string_list("Avoid", plan.get("avoid", []))}
 
 Constraints:
 - No fake brand logo.
@@ -237,10 +273,17 @@ Constraints:
 - No dense paragraphs.
 - No English sentence blocks; only short labels are allowed when necessary.
 - Avoid lifestyle, beauty, food, travel, or generic social media visuals.
-- Do not bury the hook in small text.
-- Do not use harsh black brush lettering; keep title strokes soft, rounded, and color-balanced.
+- Do not use harsh black brush lettering.
 - Do not imply the workflow can be shipped without human review.
 """
+
+
+def image_is_ready(image_path: Path, prompt_path: Path) -> bool:
+    if not image_path.exists() or image_path.stat().st_size <= 0:
+        return False
+    if not prompt_path.exists():
+        return False
+    return image_path.stat().st_mtime >= prompt_path.stat().st_mtime
 
 
 def build_package(spec: dict[str, Any], history_check: dict[str, Any]) -> dict[str, Any]:
@@ -251,17 +294,18 @@ def build_package(spec: dict[str, Any], history_check: dict[str, Any]) -> dict[s
     for index, page in enumerate(spec["pages"], start=1):
         prompt_path = prompt_dir / f"{page['page_id']}.md"
         image_path = image_dir / f"{page['page_id']}.png"
+        plan = page["image_prompt_plan"]
         write_text(prompt_path, card_prompt(page, spec))
         images.append(
             {
                 "index": index,
                 "page_id": page["page_id"],
-                "title": page["title"],
-                "subtitle": page["subtitle"],
+                "title": plan["visible_title"],
+                "subtitle": plan["visible_subtitle"],
                 "image_path": image_path.relative_to(ROOT).as_posix(),
                 "image_abs_path": str(image_path.resolve()),
                 "prompt_path": prompt_path.relative_to(ROOT).as_posix(),
-                "review_status": "approved" if image_path.exists() and image_path.stat().st_size > 0 else "pending",
+                "review_status": "approved" if image_is_ready(image_path, prompt_path) else "pending",
             }
         )
 
@@ -280,6 +324,8 @@ def build_package(spec: dict[str, Any], history_check: dict[str, Any]) -> dict[s
         "source_verification": spec.get("source_verification", {}),
         "history_check": history_check,
         "writing_brief": spec["writing_brief"],
+        "copy_generation": spec.get("copy_generation", {}),
+        "image_prompt_generation": spec.get("image_prompt_generation", {}),
         "project_facts": spec.get("project_facts", {}),
         "body_full": spec["body_full"],
         "body_char_count": len(spec["body_full"]),
@@ -304,8 +350,8 @@ def build_package(spec: dict[str, Any], history_check: dict[str, Any]) -> dict[s
         "skill_sources": {
             "topic": "aihot",
             "verification": "agent-reach for official sources, GitHub facts, X posts, papers, and source URLs",
-            "writing": "references/creator_prompt.md + current model direct writing from verified facts and writing_brief",
-            "image_prompts": "baoyu-image-cards + Codex imagegen",
+            "writing": "DeepSeek v4 Flash only via asset-generation/write_copy_deepseek.py using references/creator_prompt.md, verified facts, and writing_brief",
+            "image_prompts": "DeepSeek-only via asset-generation/write_image_prompts_deepseek.py, then baoyu-image-cards + image2/imagegen raster backend",
             "image_style": IMAGE_STYLE,
             "image_defaults": "use workspace .baoyu-skills EXTEND.md non-interactively: no watermark, balanced layout, macaron palette, imagegen backend, --yes/direct defaults",
         },

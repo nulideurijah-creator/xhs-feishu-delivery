@@ -20,6 +20,7 @@ REPORT_PATH = ROOT / "asset-generation" / "outputs" / "deepseek-copy-report.json
 DEFAULT_PROMPT_PATH = Path.home() / ".codex" / "skills" / "xhs-feishu-delivery" / "references" / "creator_prompt.md"
 DEFAULT_MODEL = "deepseek-v4-flash"
 DEFAULT_BASE_URL = "https://api.deepseek.com"
+COPY_WRITER = "asset-generation/write_copy_deepseek.py"
 MAX_ATTEMPTS = 4
 FORBIDDEN_COPY_FRAGMENTS = [
     "性感",
@@ -176,12 +177,24 @@ def normalize_copy(copy: dict[str, Any]) -> dict[str, Any]:
 
 
 def sync_cover_page(spec: dict[str, Any]) -> bool:
-    """Keep image-card cover metadata aligned after DeepSeek rewrites copy."""
+    """Keep image-card cover metadata aligned after DeepSeek updates copy."""
     pages = spec.get("pages")
     if not isinstance(pages, list) or not pages or not isinstance(pages[0], dict):
         return False
     pages[0]["title"] = spec["title"]
     return True
+
+
+def mark_copy_generation(spec: dict[str, Any], prompt_file: Path) -> None:
+    """Record that the current title/body/tags came from the DeepSeek writer."""
+    spec["copy_generation"] = {
+        "provider": "deepseek",
+        "model": os.environ.get("DEEPSEEK_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL,
+        "base_url": os.environ.get("DEEPSEEK_BASE_URL", DEFAULT_BASE_URL).strip().rstrip("/") or DEFAULT_BASE_URL,
+        "writer": COPY_WRITER,
+        "prompt_path": str(prompt_file),
+        "created_at": now(),
+    }
 
 
 def main() -> int:
@@ -203,6 +216,7 @@ def main() -> int:
     if copy is None:
         raise ValueError(f"DeepSeek failed to produce valid copy after {MAX_ATTEMPTS} attempts: {last_error}")
     spec.update(copy)
+    mark_copy_generation(spec, prompt_file)
     cover_title_synced = sync_cover_page(spec)
     write_json(SPEC_PATH, spec)
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)

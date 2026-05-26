@@ -14,8 +14,16 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "publish-mainline" / "outputs"
 ASSET_PACKAGE = ROOT / "asset-generation" / "outputs" / "current-publish-assets.json"
+CONTENT_SPEC = ROOT / "asset-generation" / "content_spec.json"
 PACKAGE_JSON = OUT / "manual-publish-package.json"
 PACKAGE_MD = OUT / "manual-publish-package.md"
+
+ASSET_MATCH_FIELDS = [
+    "review_id",
+    "content_id",
+    "title",
+    "image_slug",
+]
 
 
 def now() -> str:
@@ -35,7 +43,17 @@ def normalize_tag(value: Any) -> str:
     return str(value).strip().lstrip("#")
 
 
-def validate_assets(package: dict[str, Any]) -> tuple[list[str], list[dict[str, Any]]]:
+def stale_asset_fields(spec: dict[str, Any], package: dict[str, Any]) -> list[str]:
+    fields: list[str] = []
+    for field in ASSET_MATCH_FIELDS:
+        spec_value = str(spec.get(field, "")).strip()
+        package_value = str(package.get(field, "")).strip()
+        if spec_value and package_value and spec_value != package_value:
+            fields.append(field)
+    return fields
+
+
+def validate_assets(package: dict[str, Any], spec: dict[str, Any]) -> tuple[list[str], list[dict[str, Any]]]:
     """Check that the generated asset package is complete enough to publish manually."""
     errors: list[str] = []
     title = str(package.get("title", "")).strip()
@@ -43,6 +61,12 @@ def validate_assets(package: dict[str, Any]) -> tuple[list[str], list[dict[str, 
     tags = [normalize_tag(tag) for tag in package.get("tags", []) if normalize_tag(tag)]
     images = package.get("images", [])
 
+    if not spec:
+        errors.append("content_spec_missing")
+    else:
+        stale_fields = stale_asset_fields(spec, package)
+        if stale_fields:
+            errors.append("asset_package_stale:" + ",".join(stale_fields))
     if not title:
         errors.append("title_missing")
     if len(title) > 20:
@@ -67,6 +91,8 @@ def validate_assets(package: dict[str, Any]) -> tuple[list[str], list[dict[str, 
                 errors.append(f"image_{index}_missing")
             elif image_path.stat().st_size <= 0:
                 errors.append(f"image_{index}_empty")
+            if str(item.get("review_status", "")).strip() != "approved":
+                errors.append(f"image_{index}_not_approved")
             normalized_images.append(
                 {
                     "index": index,
@@ -116,7 +142,8 @@ def build_package() -> dict[str, Any]:
     if not package:
         raise FileNotFoundError(ASSET_PACKAGE)
 
-    errors, images = validate_assets(package)
+    spec = load_json(CONTENT_SPEC)
+    errors, images = validate_assets(package, spec)
     tags = [normalize_tag(tag) for tag in package.get("tags", []) if normalize_tag(tag)]
     status = "manual_package_ready" if not errors else "blocked"
     result = {
@@ -146,6 +173,8 @@ def main() -> int:
     PACKAGE_JSON.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     PACKAGE_MD.write_text(render_markdown(result), encoding="utf-8")
     print(f"status: {result['status']}")
+    if result["blocked_reasons"]:
+        print(f"blocked_reasons: {', '.join(result['blocked_reasons'])}")
     print(f"package: {PACKAGE_MD}")
     return 0 if result["status"] == "manual_package_ready" else 2
 

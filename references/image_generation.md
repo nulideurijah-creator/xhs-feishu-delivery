@@ -5,19 +5,23 @@ template renderer for final images.
 
 ## Required Flow
 
-1. Run the asset generator:
+1. Run the DeepSeek image prompt planner after the DeepSeek copy writer:
+
+   `python <workspace>/asset-generation/write_image_prompts_deepseek.py`
+
+2. Run the asset generator:
 
    `python <workspace>/asset-generation/generate_current_assets.py`
 
-2. Read the generated prompt package:
+3. Read the generated prompt package:
 
    `asset-generation/outputs/current-image-card-prompts.md`
 
-3. Generate the six PNG files with the user's available image-generation stack:
+4. Generate the six PNG files with the user's available image-generation stack:
 
    - preferred structure skill: `baoyu-image-cards`
    - preferred raster backend in Codex: `imagegen`
-   - fallback: the user's own equivalent image model, if Codex imagegen is not available
+   - fallback: image2 or the user's own equivalent image model, if Codex imagegen is not available
    - bundled visual style: `xhs-warm-cute-open-source`
 
    When `baoyu-image-cards` and `imagegen` are available in the runtime, use
@@ -47,11 +51,11 @@ template renderer for final images.
    count, license/open-source badge, and source cue. Do not invent missing
    counts or bury the project details on later pages.
 
-4. Save every final PNG exactly to the `image_path` values listed in:
+5. Save every final PNG exactly to the `image_path` values listed in:
 
    `asset-generation/outputs/current-publish-assets.json`
 
-5. Run packaging and Feishu validation:
+6. Run packaging and Feishu validation:
 
    `python scripts/run_xhs_delivery.py --workspace "<workspace>" --local-only`
 
@@ -61,6 +65,7 @@ template renderer for final images.
 ## Rules
 
 - Do not generate final cards with PIL, SVG, HTML, canvas, or a template drawing script.
+- Do not let `generate_current_assets.py` recreate the old prompt brain. It may only wrap DeepSeek `image_prompt_plan` values with fixed baoyu metadata.
 - Do not create, restore, edit, or run `render_current_cards.py`.
 - Do not use screenshots, browser-rendered HTML, Mermaid, matplotlib, slide decks, or placeholder diagrams as final card substitutes.
 - Do not use placeholder diagrams as final cards.

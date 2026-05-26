@@ -28,6 +28,8 @@ REQUIRED_DIRS = [
 
 REQUIRED_FILES = [
     "asset-generation/content_spec.json",
+    "asset-generation/write_copy_deepseek.py",
+    "asset-generation/write_image_prompts_deepseek.py",
     "asset-generation/generate_current_assets.py",
     "publish-mainline/build_manual_publish_package.py",
     "publish-mainline/preflight.py",
@@ -46,6 +48,8 @@ CONTENT_REQUIRED = [
     "writing_brief",
     "body_full",
     "tags",
+    "copy_generation",
+    "image_prompt_generation",
     "image_slug",
     "pages",
 ]
@@ -60,9 +64,18 @@ FEISHU_REQUIRED = [
 EXPECTED_SKILL_MARKERS = [
     "aihot",
     "agent-reach",
+    "DeepSeek",
     "creator_prompt.md",
+    "write_image_prompts_deepseek.py",
     "baoyu-image-cards",
     "imagegen",
+]
+
+ASSET_MATCH_FIELDS = [
+    "review_id",
+    "content_id",
+    "title",
+    "image_slug",
 ]
 
 EXPECTED_IMAGE_STYLE = "xhs-warm-cute-open-source"
@@ -150,17 +163,24 @@ def check_content_spec(blockers: list[str]) -> dict[str, Any]:
     tags = spec.get("tags", [])
     pages = spec.get("pages", [])
     brief = spec.get("writing_brief", {})
+    copy_generation = spec.get("copy_generation", {})
+    image_prompt_generation = spec.get("image_prompt_generation", {})
     add(len(title) > 20, blockers, f"title_too_long:{len(title)}/20")
     add(len(body) > 1000, blockers, f"body_too_long:{len(body)}/1000")
     add(not isinstance(tags, list) or not tags, blockers, "tags_missing")
     add(not isinstance(pages, list) or len(pages) != 6, blockers, "pages_not_6")
     check_writing_brief(brief, blockers)
+    check_copy_generation(copy_generation, blockers)
+    check_image_prompt_generation(image_prompt_generation, spec, blockers)
+    check_pages_have_image_prompt_plans(pages, blockers)
     return {
         "exists": True,
         "title": title,
         "title_length": len(title),
         "body_length": len(body),
         "tag_count": len(tags) if isinstance(tags, list) else 0,
+        "copy_provider": copy_generation.get("provider", "") if isinstance(copy_generation, dict) else "",
+        "image_prompt_provider": image_prompt_generation.get("provider", "") if isinstance(image_prompt_generation, dict) else "",
         "page_count": len(pages) if isinstance(pages, list) else 0,
         "image_slug": spec.get("image_slug", ""),
     }
@@ -184,12 +204,92 @@ def check_writing_brief(brief: Any, blockers: list[str]) -> None:
             add(invalid, blockers, f"writing_brief_fact_invalid:{index}")
 
 
+def check_copy_generation(copy_generation: Any, blockers: list[str]) -> None:
+    if not isinstance(copy_generation, dict):
+        blockers.append("copy_generation_invalid")
+        return
+    provider = str(copy_generation.get("provider", "")).strip().lower()
+    writer = str(copy_generation.get("writer", "")).strip()
+    model = str(copy_generation.get("model", "")).strip().lower()
+    valid = provider == "deepseek" and "asset-generation/write_copy_deepseek.py" in writer and "deepseek" in model
+    add(not valid, blockers, "copy_generation_not_deepseek")
+
+
+def spec_body_hash(spec: dict[str, Any]) -> str:
+    import hashlib
+
+    return hashlib.sha256(str(spec.get("body_full", "")).strip().encode("utf-8")).hexdigest()
+
+
+def check_image_prompt_generation(image_prompt_generation: Any, spec: dict[str, Any], blockers: list[str]) -> None:
+    if not isinstance(image_prompt_generation, dict):
+        blockers.append("image_prompt_generation_invalid")
+        return
+    provider = str(image_prompt_generation.get("provider", "")).strip().lower()
+    writer = str(image_prompt_generation.get("writer", "")).strip()
+    model = str(image_prompt_generation.get("model", "")).strip().lower()
+    valid = (
+        provider == "deepseek"
+        and "asset-generation/write_image_prompts_deepseek.py" in writer
+        and "deepseek" in model
+    )
+    add(not valid, blockers, "image_prompt_generation_not_deepseek")
+    add(
+        str(image_prompt_generation.get("source_title", "")).strip() != str(spec.get("title", "")).strip(),
+        blockers,
+        "image_prompt_generation_stale_title",
+    )
+    add(
+        str(image_prompt_generation.get("source_body_sha256", "")).strip() != spec_body_hash(spec),
+        blockers,
+        "image_prompt_generation_stale_body",
+    )
+
+
+def check_pages_have_image_prompt_plans(pages: Any, blockers: list[str]) -> None:
+    if not isinstance(pages, list):
+        return
+    required = [
+        "card_role",
+        "visible_title",
+        "visible_subtitle",
+        "visual_direction",
+        "composition",
+        "text_style",
+    ]
+    for index, page in enumerate(pages, start=1):
+        if not isinstance(page, dict):
+            blockers.append(f"page_invalid:{index}")
+            continue
+        plan = page.get("image_prompt_plan")
+        if not isinstance(plan, dict):
+            blockers.append(f"image_prompt_plan_missing:{index}")
+            continue
+        missing = [field for field in required if not str(plan.get(field, "")).strip()]
+        if missing:
+            blockers.append(f"image_prompt_plan_field_missing:{index}:{','.join(missing)}")
+
+
+def stale_asset_fields(spec: dict[str, Any], package: dict[str, Any]) -> list[str]:
+    fields: list[str] = []
+    for field in ASSET_MATCH_FIELDS:
+        spec_value = str(spec.get(field, "")).strip()
+        package_value = str(package.get(field, "")).strip()
+        if spec_value and package_value and spec_value != package_value:
+            fields.append(field)
+    return fields
+
+
 def check_asset_package(blockers: list[str]) -> dict[str, Any]:
     path = ROOT / "asset-generation" / "outputs" / "current-publish-assets.json"
     package = load_json(path)
     if not package:
         blockers.append("asset_package_missing:run_asset_generator")
         return {"exists": path.exists(), "images_ready": 0, "images_total": 0}
+
+    spec = load_json(ROOT / "asset-generation" / "content_spec.json")
+    stale_fields = stale_asset_fields(spec, package) if spec else []
+    add(bool(stale_fields), blockers, "asset_package_stale:" + ",".join(stale_fields))
 
     images = package.get("images", [])
     missing_images: list[str] = []
@@ -204,6 +304,9 @@ def check_asset_package(blockers: list[str]) -> dict[str, Any]:
         image_path = ROOT / relative
         if not image_path.exists() or image_path.stat().st_size <= 0:
             missing_images.append(relative or "missing_image_path")
+            continue
+        if str(item.get("review_status", "")).strip() != "approved":
+            missing_images.append((relative or "image") + ":not_approved")
 
     add(bool(missing_images), blockers, f"images_missing:{len(missing_images)}")
 
@@ -217,6 +320,7 @@ def check_asset_package(blockers: list[str]) -> dict[str, Any]:
         "images_ready": len(images) - len(missing_images),
         "images_total": len(images),
         "missing_images": missing_images,
+        "stale_fields": stale_fields,
         "skill_sources": package.get("skill_sources", {}),
     }
 

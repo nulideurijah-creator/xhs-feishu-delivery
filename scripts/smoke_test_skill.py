@@ -9,6 +9,7 @@ call image generation, Feishu, Xiaohongshu, or the network.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shutil
 import subprocess
@@ -21,22 +22,14 @@ from typing import Any
 EXPECTED_MARKERS = [
     "aihot",
     "agent-reach",
+    "DeepSeek",
     "creator_prompt.md",
+    "write_image_prompts_deepseek.py",
     "baoyu-image-cards",
     "imagegen",
 ]
 
 EXPECTED_IMAGE_STYLE = "xhs-warm-cute-open-source"
-
-
-def legacy_terms() -> list[str]:
-    return [
-        "dbs-" + "xhs-title",
-        "insight" + "_pack",
-        "actionable" + "_framework",
-        "title" + "_candidates",
-        "editor" + "_prompt",
-    ]
 
 
 def run(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -58,12 +51,42 @@ def load_json(path: Path) -> dict[str, Any]:
     return data
 
 
+def image_prompt_plan(index: int) -> dict[str, Any]:
+    return {
+        "card_role": "cover" if index == 1 else "inner",
+        "visible_title": f"Smoke {index}",
+        "visible_subtitle": "Fixture card",
+        "visual_direction": f"Human editorial image direction for smoke card {index}.",
+        "composition": "Large calm title, one central metaphor, enough blank space.",
+        "text_style": "Natural Chinese editorial card wording, short and sparse.",
+        "required_labels": ["fixture"],
+        "avoid": ["generic AI infographic"],
+    }
+
+
 def write_smoke_spec(workspace: Path) -> None:
-    """Create a temporary spec for the smoke test without shipping starter copy."""
+    """Create a temporary spec without shipping starter copy."""
+    title = "Smoke Title"
+    body = (
+        "This is a stable smoke-test body. It represents the final DeepSeek copy "
+        "without requiring any network call during validation."
+    )
+    pages = []
+    for index, page_id in enumerate(
+        ["01-cover", "02-gap", "03-task", "04-output", "05-rework", "06-save"],
+        start=1,
+    ):
+        pages.append(
+            {
+                "page_id": page_id,
+                "layout": "balanced",
+                "image_prompt_plan": image_prompt_plan(index),
+            }
+        )
     spec = {
         "review_id": "publish-smoke-test",
         "content_id": "smoke-ai-tool-evaluation",
-        "title": "这个工具有点顺",
+        "title": title,
         "topic": "Smoke test topic",
         "summary": "Smoke test fixture for packaging.",
         "hot_source": "smoke-test",
@@ -74,27 +97,29 @@ def write_smoke_spec(workspace: Path) -> None:
                 {"claim": "Smoke fact one.", "source_url": "https://example.com/ai-tool"},
                 {"claim": "Smoke fact two.", "source_url": "https://example.com/ai-tool-docs"},
             ],
-            "do_not_say": ["Do not use formula-title language."],
+            "do_not_say": ["Do not add unsupported claims."],
         },
         "project_facts": {},
-        "body_full": (
-            "我最近在做一个自动化 demo，翻到这个工具的文档时停了一下：它不是让我把流程全写死，"
-            "而是先把目标和素材交进去，再生成一份可检查的发布包。\n\n"
-            "我挺喜欢这种位置。做内容工作最烦的是前面聊得很热闹，到了交付又靠人手补图、补标签、补检查，"
-            "一不小心就漏。这个 smoke fixture 只是测试用，但它模拟的是同一条链路：有事实、有正文、有 6 张图的路径，"
-            "最后还能进本地校验。\n\n"
-            "别指望它替代真实选题判断，至少测试里能把最容易跑飞的环节拦住，这对维护 skill 比只看文档舒服。"
-        ),
-        "tags": ["AI工具", "自动化", "小红书运营", "工作流", "内容交付", "Feishu"],
+        "body_full": body,
+        "tags": ["AI tools", "automation", "Xiaohongshu", "workflow", "Feishu"],
+        "copy_generation": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "writer": "asset-generation/write_copy_deepseek.py",
+            "prompt_path": "references/creator_prompt.md",
+            "created_at": "2026-05-25T00:00:00+08:00",
+        },
+        "image_prompt_generation": {
+            "provider": "deepseek",
+            "model": "deepseek-v4-flash",
+            "writer": "asset-generation/write_image_prompts_deepseek.py",
+            "prompt_path": "references/image_prompt_creator_prompt.md",
+            "source_title": title,
+            "source_body_sha256": hashlib.sha256(body.strip().encode("utf-8")).hexdigest(),
+            "created_at": "2026-05-25T00:00:00+08:00",
+        },
         "image_slug": "smoke-test",
-        "pages": [
-            {"page_id": "01-cover", "title": "这个工具有点顺", "subtitle": "先看能不能进流程", "visual": "A creator comparing a shiny demo screen with a real work desk."},
-            {"page_id": "02-gap", "title": "Smoke Page 2", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
-            {"page_id": "03-task", "title": "Smoke Page 3", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
-            {"page_id": "04-output", "title": "Smoke Page 4", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
-            {"page_id": "05-rework", "title": "Smoke Page 5", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
-            {"page_id": "06-save", "title": "Smoke Page 6", "subtitle": "Fixture only", "visual": "A simple smoke test placeholder card."},
-        ],
+        "pages": pages,
     }
     path = workspace / "asset-generation" / "content_spec.json"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -136,7 +161,6 @@ def smoke_test(skill_dir: Path, keep_workspace: bool) -> tuple[dict[str, Any], i
             assert_ok(completed.returncode == 0, failures, f"asset_generator_failed:{completed.stderr.strip()}")
 
         assert_ok(package_path.exists(), failures, "asset_package_missing")
-        package: dict[str, Any] = {}
         if package_path.exists():
             package = load_json(package_path)
             assert_ok(package.get("status") == "assets_pending_images", failures, "unexpected_asset_status")
@@ -145,17 +169,15 @@ def smoke_test(skill_dir: Path, keep_workspace: bool) -> tuple[dict[str, Any], i
             source_text = json.dumps(package.get("skill_sources", {}), ensure_ascii=False)
             for marker in EXPECTED_MARKERS:
                 assert_ok(marker in source_text, failures, f"skill_marker_missing:{marker}")
-            package_text = json.dumps(package, ensure_ascii=False)
-            for term in legacy_terms():
-                assert_ok(term not in package_text, failures, f"legacy_term_found:{term}")
 
         assert_ok(cover_prompt.exists(), failures, "cover_prompt_missing")
         if cover_prompt.exists():
             prompt_text = cover_prompt.read_text(encoding="utf-8")
             assert_ok(f"style: {EXPECTED_IMAGE_STYLE}" in prompt_text, failures, "cover_style_missing")
-            assert_ok("Cover hook rules:" in prompt_text, failures, "cover_hook_rules_missing")
-            assert_ok("central GitHub-style project card" in prompt_text, failures, "cover_project_visibility_missing")
-            assert_ok("title: 这个工具有点顺" in prompt_text, failures, "cover_title_missing")
+            assert_ok("DeepSeek-generated image prompt plan" in prompt_text, failures, "deepseek_image_prompt_plan_missing")
+            assert_ok("Cover hook rules:" not in prompt_text, failures, "removed_cover_hook_rules_present")
+            assert_ok("Main title, verbatim" not in prompt_text, failures, "removed_main_title_template_present")
+            assert_ok("title: Smoke 1" in prompt_text, failures, "cover_title_missing")
 
         result = {
             "status": "ok" if not failures else "failed",

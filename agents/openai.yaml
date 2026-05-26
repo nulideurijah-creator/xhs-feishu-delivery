@@ -2,6 +2,6 @@
 interface:
   display_name: "XHS Feishu Delivery"
   short_description: "Generate Xiaohongshu packages and Feishu delivery cards"
-  default_prompt: "Use $xhs-feishu-delivery with the clean research + model-writing chain to prepare a Xiaohongshu image-text package and send the complete delivery card to Feishu."
+  default_prompt: "Use $xhs-feishu-delivery with the clean research + DeepSeek writing chain to prepare a Xiaohongshu image-text package and send the complete delivery card to Feishu."
 policy:
   allow_implicit_invocation: true
